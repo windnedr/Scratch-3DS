@@ -1,7 +1,100 @@
 :root{
     --primary: #855CD6;
+    --footer: #F2F2F2;
+    --gray: #575E75;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+h1, p{
+    margin-left: 5px;
+}
+
+p{
+    color: var(--gray);
+}
+
+html{
+    background-image: url("Frame 1 (4).png");
+    background-size: 50px;
+    /* linear-gradient(45deg ,var(--primary), #6a2be9); */
+    background-color: var(--primary);
+
+    background-blend-mode: soft-light;
+
+    justify-content: center;
+    text-align: center;
+    height: 300px;
+
+    animation: infinite moveDot 2s linear;
+}
+
+body{
+    margin: 0px;
+    font-family: Arial, Helvetica, sans-serif;
+
+    background-color: white;
+
+    color: var(--primary);
+
+    width: 75vw;
+    margin-left: 12.5%;
+
+    box-shadow: #480DBD 0px -4px 15px;
+
+    min-height: 100vh;
+
+}
+
+div.banner{
+    background-image: url("");
+    background-size: 50px;
+    /* linear-gradient(45deg ,var(--primary), #6a2be9); */
+    background-color: var(--primary);
+
+    background-blend-mode: soft-light;
+
+    justify-content: center;
+    text-align: center;
+    height: 300px;
+
+
+    animation: infinite moveDot 2s linear;
+}
+
+@keyframes moveDot {
+from{
+    background-position: 0px;
+}
+to{
+    background-position: 100px 175px;
+
+}
+}
+
+@keyframes colorShift {
+    from{
+        filter: hue-rotate(0deg);
+    }
+    to{
+        filter: hue-rotate(360deg)
+    
+    }
+    }
+
+div.banner img{
+    position: relative;
+    top: 25%;    
 }
 
 footer{
-    background-color: var(--primary);
+    background-color: var(--footer);
+    padding-top: 20px;
+    padding-bottom: 10px;
+    color: var(--gray);
+}
+
+footer a{
+    color: var(--primary);
+    text-decoration: wavy;
 }
