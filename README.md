@@ -3,7 +3,7 @@
   
 ### A remake of [scratch](https://scratch.mit.edu/) using LOVEPOTION.
 
-Supports:
+Supports: <br>
 SB3 Import / Export <br>
 Original Scratch Blocks <br>
 3D Functions <br>
