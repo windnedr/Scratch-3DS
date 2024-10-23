@@ -1,7 +1,9 @@
 # Scratch-3DS
 ![costume2 (1)](https://github.com/user-attachments/assets/e25d7c3f-af83-4e3d-b099-4b5909e9aaa5)
   
-### A remake of [scratch](https://scratch.mit.edu/) using LOVEPOTION.
+A remake of [scratch](https://scratch.mit.edu/) using LOVEPOTION.
+
+# UNFINISHED!!
 
 Supports: <br>
 SB3 Import / Export <br>
