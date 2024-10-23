@@ -11,6 +11,7 @@ in no specific order:
   - [ ] Switching to Sprites <br>
 
 - [ ] Variables <br>
+  - [ ] Custom Variables <br>
   <details>
     <summary>Original</summary>
   <details>
@@ -29,7 +30,54 @@ in no specific order:
     - [ ] Backdrop [Name v] <br>
     - [ ] Size <br>
 
+    </details><details>
+    <summary>Sound</summary>
+      
+    - [ ] Volume <br>
+
+    </details><details>
+    <summary>Sensing</summary>
+      
+    - [ ] Touching ()? <br>
+    - [ ] Touching color ()? <br>
+    - [ ] color () is touching ()? <br>
+    - [ ] Distance to () <br>
+    - [ ] answer <br>
+    - [ ] key () pressed?<br>
+    - [ ] mouse down? <br>
+    - [ ] mouse x <br>
+    - [ ] mouse y <br>
+    - [ ] loudness <br>
+    - [ ] timer <br>
+    - [ ] \[ \] of (Sprite) <br>
+    - [ ] current [] <br>
+    - [ ] days since 2000 <br>
+    - [ ] username <br>
+    </details><details>
+    <summary>Operators</summary>
+      
+    - [ ] () + () <br>
+    - [ ] () - () <br>
+    - [ ] () * () <br>
+    - [ ] () / () <br>
+    - [ ] pick random () to () <br>
+    - [ ] () > () <br>
+    - [ ] () < () <br>
+    - [ ] () = () <br>
+    - [ ] <> and <> <br>
+    - [ ] <> or <> <br>
+    - [ ] not <> <br>
+    - [ ] join () () <br>
+    - [ ] letter (num) of (str) <br>
+    - [ ] length of () <br>
+    - [ ] () contains () ? <br>
+    - [ ] () mod () <br>
+    - [ ] round () <br>
+    - [ ] [--- v] of () <br>
+
     </details>
+    
+    
   </details>
 
 
