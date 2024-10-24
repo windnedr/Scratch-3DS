@@ -2,7 +2,7 @@
 in no specific order:
 - [ ] Usable SVG <br>
 - [ ] Rendering <br>
-- [ ] Stage <br>
+- [x] Stage <br>
 - [ ] Settings <br>
 - [ ] Editor <br>
   - [ ] Switching to Code <br>
@@ -13,7 +13,7 @@ in no specific order:
 - [ ] Variables <br>
   - [ ] Custom Variables <br>
   <details>
-    <summary>Original</summary>
+    <summary>List of Every Variable</summary>
   <details>
     <summary>Motion</summary>
       
@@ -75,9 +75,13 @@ in no specific order:
     - [ ] round () <br>
     - [ ] [--- v] of () <br>
 
+    </details><details>
+    <summary>3DS</summary>
+      
+    - [ ] depth slider <br>
+    - [ ] depth <br>
+
     </details>
-    
-    
   </details>
 
 
@@ -89,7 +93,7 @@ in no specific order:
 
 Settings:
 - [ ] Toolbar Positions <br>
-  - [x] Above Editor <br>
+  - [ ] Above Editor <br>
   - [ ] Below Editor <br>
   - [ ] Select <br>
 - [ ] Editor Binds <br>
