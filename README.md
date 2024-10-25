@@ -31,8 +31,12 @@ do this, do that. Congrat
 ## How to use
 \[REQUIRES HOMEBREW\] <br>
 <br>
+> [!NOTE]
+> Screenshots needed.
+
 After [downloading the release](#downloading), move the file to `sdmc:/3ds/` using FTP or an external computer.<br>
-after moving the file, eject and insert the SD card back into your 3DS.<br> <br>
+after moving the file, safely remove the SD from your computer, and insert it back into your 3DS.<br> 
+<br>
 Open the homebrew laucher and select "Scratch 3DS"
 ## Support
 https://github.com/windnedr/Scratch-3DS/issues
