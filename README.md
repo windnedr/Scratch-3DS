@@ -29,7 +29,10 @@ After [downloading the release](#downloading), move the file to `sdmc:/3ds/` usi
 after moving the file, eject and insert the SD card back into your 3DS.<br> <br>
 Open the homebrew laucher and select "Scratch 3DS"
 ## Support
-Take your issues to.. [the issues tab](https://github.com/windnedr/Scratch-3DS/issues)
+https://github.com/windnedr/Scratch-3DS/issues
+
+If you have a fix for SVGs, then [open an issue](https://github.com/windnedr/Scratch-3DS/issues)
+
 
 <details>
 <summary>To-Do</summary>
