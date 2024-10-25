@@ -8,9 +8,9 @@ SB3 Import / Export <br>
 Original Scratch Blocks <br>
 3D Functions <br>
 
-Won't support on launch:
-SVG
-Pen (yet)
+Won't support on launch: <br>
+SVG <br>
+Pen (yet) <br>
 
 ## About This project
 This originaly started as a fully non-functional joke. While it was in my head, I decided to open a SB3 file and saw how easy the structure is.
