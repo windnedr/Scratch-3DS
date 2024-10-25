@@ -9,12 +9,12 @@ A remake of [scratch](https://scratch.mit.edu/) using LOVEPOTION. <br>
 > <br>
 > Sorry for any inconvinence. :/
 
-Will Support on launch: <br>
+**Will Support on launch**: <br>
 SB3 Import / Export <br>
 Original Scratch Blocks <br>
 3D Functions <br>
 
-Won't support on launch: <br>
+**Won't support on launch**: <br>
 SVG <br>
 Pen (yet) <br>
 
