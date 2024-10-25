@@ -5,7 +5,7 @@ A remake of [scratch](https://scratch.mit.edu/) using LOVEPOTION. <br>
 
 > [!WARNING]
 > My 3DS is in critical condition.<br>
-> *Scratch-3DS will be developed slower than usual until it's fixed.*<br>
+> *Scratch-3DS may be developed slower than usual until it's fixed.*<br>
 > <br>
 > Sorry for any inconvinence. :/
 
