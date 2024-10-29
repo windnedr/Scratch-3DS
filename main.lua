@@ -10,6 +10,10 @@ depthEnabled = false
 ExtButtonClicks = 0
 clickCoords = "None"
 
+icons = {
+  ext = love.graphics.newImage("assets/ext.png"),
+}
+
 cat = love.graphics.rectangle("fill", 5, 5, 62, 118)
 bp = love._os
 
@@ -36,8 +40,12 @@ function love.draw(screen)
     love.graphics.line(0, 31, width, 31)
     love.graphics.rectangle("line", 0, 31, 40, height)
 
+    -- Extentions Button
     love.graphics.setColor(133/255,92/255,214/255)
     love.graphics.rectangle("fill", extButton.x, extButton.y - extButton.height, extButton.width, extButton.height)    
+    love.graphics.setColor(1,1,1)
+
+    love.graphics.draw(icons.ext, extButton.width / 2 + extButton.x - icons.ext:getWidth() / 2 , extButton.y - extButton.height / 2 - icons.ext:getHeight() / 2 )
   end
   if screen ~= "bottom" then -- render top screen
     love.graphics.setColor(195/255, 204/255, 217/255)
@@ -77,6 +85,6 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
   if x > extButton.x and x < extButton.x + extButton.width and
   y < extButton.y and y > extButton.y - extButton.height then -- Checks if the mouse is on the button
     ExtButtonClicks = ExtButtonClicks + 1
-    clickCoords = {x,", ",y, ":Valid"}
+    clickCoords = {x,", ",y, ":Extentions"}
   end
 end
