@@ -11,9 +11,25 @@ ExtButtonClicks = 0
 clickCoords = "None"
 
 scene = "editor"
+frame = 0
+
+sceneList = {
+  "editor", "extentnions"
+}
 
 icons = {
   ext = love.graphics.newImage("assets/ext.png"),
+
+  -- 3DS
+  n3DS = love.graphics.newImage("assets/3ds/n3DS.png"),
+  n3DSTrans = love.graphics.newImage("assets/3ds/n3DSTrans.png"),
+  o3DS = love.graphics.newImage("assets/3ds/o3DS.png"),
+  o3DSTrans = love.graphics.newImage("assets/3ds/o3DSTrans.png"),
+
+}
+sfx = {
+  select = love.audio.newSource("assets/SFX/Pop2.wav", "static"),
+  fadeIn = love.audio.newSource("assets/SFX/fadeIn.wav", "static"),
 }
 
 cat = love.graphics.rectangle("fill", 5, 5, 62, 118)
@@ -32,6 +48,8 @@ function love.draw(screen)
   local width, height = love.graphics.getDimensions(screen)
   depthSlider = math.floor(love.graphics.getDepth() * 100)
   love.graphics.setBackgroundColor(1,1,1)
+
+  frame = frame + 1
 
   if scene == "editor" then
     if screen == "bottom" then -- render bottom screen
@@ -66,17 +84,22 @@ function love.draw(screen)
 
   if scene == "extentions" then
     love.graphics.setBackgroundColor(133/255, 92/255, 214/255)
+    font = love.graphics.newFont(24)
 
     if screen == "bottom" then -- render bottom screen
       love.graphics.setColor(195/255, 204/255, 217/255)
-      love.graphics.print("hehe",0,0)
+      love.graphics.print("Extentions",320 / 2 - font:getWidth("hehe") / 2, 10)
     end
     
     if screen ~= "bottom" then -- render top screen
-      love.graphics.print("hehe",0,0)
+    love.graphics.setColor(1,1,1)
+      love.graphics.draw(icons.n3DS, width / 2 - icons.n3DS:getWidth() / 2, height / 2 - icons.n3DS:getHeight() / 2)
+      love.graphics.print("Placeholder", 165, 60)
     end
   end
 end
+
+-- !! END OF DRAW !! --
 
 function love.gamepadpressed(joystick, button)
   love.graphics.setColor(0,0,1)
@@ -100,14 +123,16 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
   clickCoords = {x,", ",y }
   love.graphics.print(x,y)
   if x > extButton.x and x < extButton.x + extButton.width and
-  y < extButton.y and y > extButton.y - extButton.height then -- Checks if the mouse is on the button
+  y < extButton.y and y > extButton.y - extButton.height and extButton.enabled then -- Checks if the mouse is on the button
     ExtButtonClicks = ExtButtonClicks + 1
     clickCoords = {x,", ",y, ":Extentions"}
+    love.audio.play(sfx.select)
     switchSceneTo("extentions")
+    love.audio.play(sfx.fadeIn)
+    extButton.enabled = false
     end
 end
 
 function switchSceneTo(ID)
   scene = ID
-  
 end
