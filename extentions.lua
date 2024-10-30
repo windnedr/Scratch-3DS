@@ -1,31 +1,18 @@
-local nest = require("nest").init({ console = "3ds", scale = 1 })
--- local tove = require("tove")
-local editor = require("editor")
-local stage = require("stage")
-
-stageWidth = 480
-stageHeight = 360
-stageScale = 1.52
-depthEnabled = false
-ExtButtonClicks = 0
-clickCoords = "None"
-
-scene = "editor"
-
+visible = false
 icons = {
   ext = love.graphics.newImage("assets/ext.png"),
 }
 
-cat = love.graphics.rectangle("fill", 5, 5, 62, 118)
-bp = love._os
-
-bottomDimensions = {width=0,height=0}
-
 function love.load()
-  love.graphics.set3D(depthEnabled)
-  bottomDimensions.width, bottomDimensions.height = love.graphics.getDimensions(bottom)
-  extButton = {x = 0, y = bottomDimensions.height, width = 40, height = 40, enabled=true}--Button object
   
+end
+
+function show()
+  visible = true
+end
+
+function hide()
+  visible = false
 end
 
 function love.draw(screen)
@@ -33,9 +20,8 @@ function love.draw(screen)
   depthSlider = math.floor(love.graphics.getDepth() * 100)
   love.graphics.setBackgroundColor(1,1,1)
 
-  if scene == "editor" then
+  if visible then
     if screen == "bottom" then -- render bottom screen
-    
       love.graphics.setColor(229/255,240/255,1)
       love.graphics.rectangle("fill", 0,0, width, 30)
       love.graphics.setColor(195/255, 204/255, 217/255)
@@ -49,7 +35,6 @@ function love.draw(screen)
 
       love.graphics.draw(icons.ext, extButton.width / 2 + extButton.x - icons.ext:getWidth() / 2 , extButton.y - extButton.height / 2 - icons.ext:getHeight() / 2 )
     end
-    
     if screen ~= "bottom" then -- render top screen
       love.graphics.setColor(195/255, 204/255, 217/255)
       love.graphics.rectangle("line", width / 2 - stageWidth/stageScale/2, height / 2 - stageHeight/stageScale/2 , stageWidth/stageScale, stageHeight/stageScale)
@@ -61,19 +46,6 @@ function love.draw(screen)
       love.graphics.print(ExtButtonClicks, 5, 25)
       love.graphics.print(clickCoords, 5, 35)
 
-    end
-  end
-
-  if scene == "extentions" then
-    love.graphics.setBackgroundColor(133/255, 92/255, 214/255)
-
-    if screen == "bottom" then -- render bottom screen
-      love.graphics.setColor(195/255, 204/255, 217/255)
-      love.graphics.print("hehe",0,0)
-    end
-    
-    if screen ~= "bottom" then -- render top screen
-      love.graphics.print("hehe",0,0)
     end
   end
 end
@@ -103,11 +75,10 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
   y < extButton.y and y > extButton.y - extButton.height then -- Checks if the mouse is on the button
     ExtButtonClicks = ExtButtonClicks + 1
     clickCoords = {x,", ",y, ":Extentions"}
-    switchSceneTo("extentions")
-    end
+    extentions()
+  end
 end
 
-function switchSceneTo(ID)
-  scene = ID
+function extentions()
   
 end
