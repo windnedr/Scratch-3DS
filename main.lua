@@ -1,4 +1,4 @@
-local nest = require("nest").init({ console = "3ds", scale = 1 })
+local nest = require("nest").init({ console = "3ds", scale = 2 })
 -- local tove = require("tove")
 local editor = require("editor")
 local stage = require("stage")
@@ -12,6 +12,19 @@ clickCoords = "None"
 
 scene = "editor"
 frame = 0
+
+color = {
+  accent = {
+    r = 133/255, 
+    g = 92/255,
+    b = 214/255,
+
+  }, bg = {
+    r = 1, 
+    g = 1,
+    b = 1,
+  },
+}
 
 sceneList = {
   "editor", "extentions"
@@ -28,7 +41,10 @@ icons = {
 
 }
 sfx = {
-  select = love.audio.newSource("assets/SFX/Pop2.wav", "static"),
+  select = love.audio.newSource("assets/SFX/Ready.wav", "static"),
+  back = love.audio.newSource("assets/SFX/Unready.wav", "static"),
+
+
   fadeIn = love.audio.newSource("assets/SFX/fadeIn.wav", "static"),
   fadeOut = love.audio.newSource("assets/SFX/fadeOut.wav", "static"),
 }
@@ -46,11 +62,17 @@ function love.load()
 end
 
 function love.draw(screen)
+  local sysDepth = 1 -- -love.graphics.getDepth()
+
   local width, height = love.graphics.getDimensions(screen)
   depthSlider = math.floor(love.graphics.getDepth() * 100)
   love.graphics.setBackgroundColor(1,1,1)
 
   frame = frame + 1
+
+  if screen == "right" then
+    sysDepth = -sysDepth
+  end
 
   if scene == "editor" then
     if screen == "bottom" then -- render bottom screen
@@ -62,7 +84,7 @@ function love.draw(screen)
       love.graphics.rectangle("line", 0, 31, 40, height)
 
       -- Extentions Button
-      love.graphics.setColor(133/255,92/255,214/255)
+      love.graphics.setColor(color.accent.r, color.accent.g, color.accent.b)
       love.graphics.rectangle("fill", extButton.x, extButton.y - extButton.height, extButton.width, extButton.height)    
       love.graphics.setColor(1,1,1)
 
@@ -84,18 +106,24 @@ function love.draw(screen)
   end
 
   if scene == "extentions" then
-    love.graphics.setBackgroundColor(133/255, 92/255, 214/255)
+    love.graphics.setBackgroundColor(color.accent.r, color.accent.g, color.accent.b)
     font = love.graphics.newFont(24)
 
     if screen == "bottom" then -- render bottom screen
-      love.graphics.setColor(195/255, 204/255, 217/255)
+      love.graphics.setColor(1,1,1)
       love.graphics.print("Extentions",320 / 2 - font:getWidth("hehe") / 2, 10)
     end
     
     if screen ~= "bottom" then -- render top screen
     love.graphics.setColor(1,1,1)
-      love.graphics.draw(icons.n3DS, width / 2 - icons.n3DS:getWidth() / 2, height / 2 - icons.n3DS:getHeight() / 2)
+      love.graphics.draw(icons.n3DS, width / 2 - icons.n3DS:getWidth() / 2 - sysDepth * 5, height / 2 - icons.n3DS:getHeight() / 2)
       love.graphics.print("Placeholder", 165, 60)
+
+      love.graphics.print(screen, 5, 5)
+      love.graphics.print(bp, 5, 15)
+
+      love.graphics.print(ExtButtonClicks, 5, 25)
+      love.graphics.print(clickCoords, 5, 35)
     end
   end
 end
@@ -146,14 +174,14 @@ end
 function openExt()
   love.audio.play(sfx.select)
   switchSceneTo("extentions")
-  love.audio.play(sfx.fadeIn)
+  -- love.audio.play(sfx.fadeIn)
   extButton.enabled = false
 end
 
 function closeExt()
-  love.audio.play(sfx.select)
+  love.audio.play(sfx.back)
   switchSceneTo("editor")
-  love.audio.play(sfx.fadeOut)
+  -- love.audio.play(sfx.fadeOut)
   extButton.enabled = true
 end
 
