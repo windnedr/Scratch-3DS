@@ -14,7 +14,7 @@ scene = "editor"
 frame = 0
 
 sceneList = {
-  "editor", "extentnions"
+  "editor", "extentions"
 }
 
 icons = {
@@ -30,6 +30,7 @@ icons = {
 sfx = {
   select = love.audio.newSource("assets/SFX/Pop2.wav", "static"),
   fadeIn = love.audio.newSource("assets/SFX/fadeIn.wav", "static"),
+  fadeOut = love.audio.newSource("assets/SFX/fadeOut.wav", "static"),
 }
 
 cat = love.graphics.rectangle("fill", 5, 5, 62, 118)
@@ -104,17 +105,31 @@ end
 function love.gamepadpressed(joystick, button)
   love.graphics.setColor(0,0,1)
   bp = button
-  if button == "x" then
-    depthEnabled = not depthEnabled
-    love.graphics.set3D(depthEnabled)
+  if scene == "editor" then
+    if button == "rightshoulder" then
+      depthEnabled = not depthEnabled
+      love.graphics.set3D(depthEnabled)
+    end
+
+    if button == "x" then
+      openExt()
+    end
+    
+    if button == "y" then
+      love.keyboard.setTextInput(true, {
+        hint = "type word ;)"
+      })
+    end
+    
+    if button == "start" then
+      love.event.quit()
+    end
   end
-  if button == "start" then
-    love.event.quit()
-  end
-  if button == "y" then
-    love.keyboard.setTextInput(true, {
-      hint = "type word ;)"
-    })
+
+  if scene == "extentions" then
+    if button == "b" then
+      closeExt()
+    end
   end
 end
 
@@ -124,13 +139,22 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
   love.graphics.print(x,y)
   if x > extButton.x and x < extButton.x + extButton.width and
   y < extButton.y and y > extButton.y - extButton.height and extButton.enabled then -- Checks if the mouse is on the button
-    ExtButtonClicks = ExtButtonClicks + 1
-    clickCoords = {x,", ",y, ":Extentions"}
-    love.audio.play(sfx.select)
-    switchSceneTo("extentions")
-    love.audio.play(sfx.fadeIn)
-    extButton.enabled = false
+      openExt()
     end
+end
+
+function openExt()
+  love.audio.play(sfx.select)
+  switchSceneTo("extentions")
+  love.audio.play(sfx.fadeIn)
+  extButton.enabled = false
+end
+
+function closeExt()
+  love.audio.play(sfx.select)
+  switchSceneTo("editor")
+  love.audio.play(sfx.fadeOut)
+  extButton.enabled = true
 end
 
 function switchSceneTo(ID)
