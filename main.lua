@@ -1,4 +1,4 @@
-local nest = require("nest").init({ console = "3ds", scale = 2 })
+local nest = require("nest").init({ console = "3ds", scale = 1 })
 -- local tove = require("tove")
 local editor = require("editor")
 local stage = require("stage")
@@ -158,6 +158,12 @@ function love.gamepadpressed(joystick, button)
     if button == "b" then
       closeExt()
     end
+
+    if button == "y" then
+      success = love.system.openURL( "https://scratch.mit.edu/" )
+    end
+    
+
   end
 end
 
