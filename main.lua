@@ -1,4 +1,4 @@
-local nest = require("nest").init({ console = "3ds", scale = 2 })
+local nest = require("nest").init({ console = "3ds", scale = 1 })
 -- local tove = require("tove")
 local editor = require("editor")
 local stage = require("stage")
@@ -71,6 +71,9 @@ sfx = {
 
   fadeIn = love.audio.newSource("assets/SFX/fadeIn.wav", "static"),
   fadeOut = love.audio.newSource("assets/SFX/fadeOut.wav", "static"),
+
+  load = love.audio.newSource("assets/SFX/load.wav", "static"),
+
 }
 
 cat = love.graphics.rectangle("fill", 5, 5, 62, 118)
@@ -90,6 +93,7 @@ button = {
     state="normal"
   },
   startMenu = {
+
     code = {
       x = 12, 
       y = 12 + topPanelY,
@@ -98,10 +102,38 @@ button = {
       enabled=true
     },
     costume = {
-      x = 11, 
-      y = 11 + topPanelY,
-      width = 40, 
-      height = 40,
+      x = 12, 
+      y = 12 + 26 + topPanelY,
+      width = bottomDimensions.width - 12 * 2, 
+      height = 26,
+      enabled=true
+    },
+    sound = {
+      x = 12, 
+      y = 12 + 26 * 2 + topPanelY,
+      width = bottomDimensions.width - 12 * 2, 
+      height = 26,
+      enabled=true
+    },
+    sprite = {
+      x = 12, 
+      y = 12 + 26 * 3 + topPanelY,
+      width = bottomDimensions.width - 12 * 2, 
+      height = 26,
+      enabled=true
+    },
+    file = {
+      x = 12, 
+      y = 12 + 26 * 4 + topPanelY,
+      width = bottomDimensions.width - 12 * 2, 
+      height = 26,
+      enabled=true
+    },
+    setting = {
+      x = 12, 
+      y = 12 + 26 * 5 + topPanelY,
+      width = bottomDimensions.width - 12 * 2, 
+      height = 26,
       enabled=true
     },
   }
@@ -118,7 +150,14 @@ end
 
 function love.draw(screen)
   button.extClicks = scene
-  button.startMenu.code.y = 12 + topPanelY
+
+  button.startMenu.code.y = 12 + 26 + topPanelY
+  button.startMenu.costume.y = 12 + 26 * 2 + topPanelY
+  button.startMenu.sound.y = 12 + 26 * 3 + topPanelY
+  button.startMenu.sprite.y = 12 + 26 * 4 + topPanelY
+  button.startMenu.file.y = 12 + 26 * 5 + topPanelY
+  button.startMenu.setting.y = 12 + 26 * 6 + topPanelY
+
 
   local sysDepth = love.graphics.getDepth() -- -love.graphics.getDepth()
 
@@ -194,6 +233,37 @@ function love.draw(screen)
     end
   end
 
+  if scene == "settings" then
+    love.graphics.setBackgroundColor(color.accent.purple.r, color.accent.purple.g, color.accent.purple.b, topPanelY / -40 + 0.5)
+
+    if screen == "bottom" then -- render bottom screen
+      love.graphics.setColor(1,1,1)
+      love.graphics.print("Settings", 320 / 2 - font:getWidth("Settings") / 2, 10 - topPanelY)
+
+      love.graphics.setColor(1,1,1)
+      love.graphics.rectangle("fill", button.ext.x, button.ext.y - button.ext.height, button.ext.width, button.ext.height)    
+      love.graphics.setColor(color.accent.purple.r, color.accent.purple.g, color.accent.purple.b)
+
+      love.graphics.draw(icons.close, button.ext.width / 2 + button.ext.x - icons.close:getWidth() / 2 , button.ext.y - button.ext.height / 2 - icons.close:getHeight() / 2 )
+    end
+    
+    if screen ~= "bottom" then -- render top screen
+
+      love.graphics.setColor(1,1,1)
+      love.graphics.draw(icons.n3DS, width / 2 - icons.n3DS:getWidth() / 2 - sysDepth * 5, height / 2 - icons.n3DS:getHeight() / 2 + topPanelY)
+      topPanelY = topPanelY / 1.4
+      love.graphics.print("Placeholder", 165, 60 + topPanelY / 2)
+
+      love.graphics.print(screen, 5, 5)
+      love.graphics.print(bp, 5, 15)
+
+      love.graphics.print(button.extClicks, 5, 25)
+      love.graphics.print(clickCoords, 5, 35)
+
+    end
+  end
+
+
 
   if scene == "startMenu" then
     if screen == "bottom" then -- render bottom screen
@@ -217,8 +287,55 @@ function love.draw(screen)
       love.graphics.rectangle("line", 11,11 + topPanelY, 320 - 22, 240 - 22) 
       topPanelY = topPanelY / 1.4
 
-      love.graphics.setColor(color.accent.purple.r / 2,color.accent.purple.g / 2,color.accent.purple.b / 2)
-      love.graphics.rectangle("fill", button.startMenu.code.x,button.startMenu.code.y, button.startMenu.code.width, button.startMenu.code.height) 
+      -- !! Buttons start here !! --
+
+      -- code
+      love.graphics.setColor(0,0,0,0.1)
+      love.graphics.rectangle("fill", button.startMenu.code.x,button.startMenu.code.y - button.startMenu.code.height, button.startMenu.code.width, button.startMenu.code.height) 
+      love.graphics.setColor(1,1,1)
+
+      love.graphics.draw(icons.code, button.startMenu.code.x + 5, button.startMenu.code.y + 2 - button.startMenu.code.height)
+      love.graphics.print("Code", button.startMenu.code.x + 30,button.startMenu.code.y + 5 - button.startMenu.code.height)
+
+      -- costume
+      love.graphics.setColor(0,0,0,0)
+      love.graphics.rectangle("fill", button.startMenu.costume.x,button.startMenu.costume.y - button.startMenu.code.height, button.startMenu.costume.width, button.startMenu.costume.height) 
+      love.graphics.setColor(1,1,1)
+
+      love.graphics.draw(icons.cost, button.startMenu.costume.x + 5, button.startMenu.costume.y + 2 - button.startMenu.code.height)
+      love.graphics.print("Costumes", button.startMenu.costume.x + 30,button.startMenu.costume.y + 5 - button.startMenu.code.height)
+
+      -- sound
+      love.graphics.setColor(0,0,0,0.1)
+      love.graphics.rectangle("fill", button.startMenu.sound.x,button.startMenu.sound.y - button.startMenu.code.height, button.startMenu.sound.width, button.startMenu.sound.height) 
+      love.graphics.setColor(1,1,1)
+
+      love.graphics.draw(icons.snd, button.startMenu.sound.x + 5, button.startMenu.sound.y + 2 - button.startMenu.code.height)
+      love.graphics.print("Sounds", button.startMenu.sound.x + 30,button.startMenu.sound.y + 5 - button.startMenu.code.height)
+
+      -- sprite
+      love.graphics.setColor(0,0,0,0)
+      love.graphics.rectangle("fill", button.startMenu.sprite.x,button.startMenu.sprite.y - button.startMenu.code.height, button.startMenu.sprite.width, button.startMenu.sprite.height) 
+      love.graphics.setColor(1,1,1)
+
+      love.graphics.draw(icons.spr, button.startMenu.sprite.x + 5, button.startMenu.sprite.y + 2 - button.startMenu.code.height)
+      love.graphics.print("Sprites", button.startMenu.sprite.x + 30,button.startMenu.sprite.y + 5 - button.startMenu.code.height)
+
+      -- file
+      love.graphics.setColor(0,0,0,0.1)
+      love.graphics.rectangle("fill", button.startMenu.file.x,button.startMenu.file.y - button.startMenu.code.height, button.startMenu.file.width, button.startMenu.file.height) 
+      love.graphics.setColor(1,1,1)
+
+      love.graphics.draw(icons.file, button.startMenu.file.x + 5, button.startMenu.file.y + 2 - button.startMenu.code.height)
+      love.graphics.print("File", button.startMenu.file.x + 30,button.startMenu.file.y + 5 - button.startMenu.code.height)
+
+      -- settings
+      love.graphics.setColor(0,0,0,0)
+      love.graphics.rectangle("fill", button.startMenu.setting.x,button.startMenu.setting.y - button.startMenu.code.height, button.startMenu.setting.width, button.startMenu.setting.height) 
+      love.graphics.setColor(1,1,1)
+
+      love.graphics.draw(icons.set, button.startMenu.setting.x + 5, button.startMenu.setting.y + 2 - button.startMenu.code.height)
+      love.graphics.print("Settings", button.startMenu.setting.x + 30,button.startMenu.setting.y + 5 - button.startMenu.code.height)
 
     end
     
@@ -269,9 +386,10 @@ function love.gamepadpressed(joystick, button)
     end
     
     if button == "y" then
-      love.keyboard.setTextInput(true, {
-        hint = "type word ;)"
-      })
+      --love.keyboard.setTextInput(true, {
+      --  hint = "type word ;)"
+      --})
+      save()
     end
     
     if button == "start" then
@@ -303,15 +421,25 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
   love.graphics.setColor(0,0,0)
   clickCoords = {x,", ",y }
   love.graphics.print(x,y)
-  if x > button.ext.x and x < button.ext.x + button.ext.width and
-  y < button.ext.y and y > button.ext.y - button.ext.height and button.ext.enabled then -- Checks if the mouse is on the button
-  
+  -- extentions
+  if x > button.ext.x and x < button.ext.x + button.ext.width and y < button.ext.y and y > button.ext.y - button.ext.height and button.ext.enabled then -- Checks if the mouse is on the button
     if button.ext.state == "normal" then
       openExt()
     end
     if button.ext.state == "close" then
       closeExt()
     end
+  end
+  -- file
+  if x > button.startMenu.file.x and x < button.startMenu.file.x + button.startMenu.file.width and y < button.startMenu.file.y and y > button.startMenu.file.y - button.startMenu.file.height then 
+    clickCoords = {x,", ",y, ":file"}
+    startMenu("close")
+    save()
+  end
+  -- settings
+  if x > button.startMenu.setting.x and x < button.startMenu.setting.x + button.startMenu.setting.width and y < button.startMenu.setting.y and y > button.startMenu.setting.y - button.startMenu.setting.height then 
+    topPanelY = 30
+    switchSceneTo("settings")
   end
 end
 
@@ -347,17 +475,21 @@ function switchSceneTo(ID)
 end
 
 function save()
-  saveLocation = "./projects"
+  love.audio.play(sfx.load)
+  savefolder = "projects"
+  saveLocation = "./"..savefolder.."/"
 
-  local saveFile = love.filesystem.openFile("save.txt", "w")
-  savefile:write("The words are not important to the plot.")
+  if not love.filesystem.getInfo(saveLocation) then
+    love.filesystem.createDirectory(savefolder)
+  end
+
+  local saveFile = saveLocation.."save.txt"
+  love.filesystem.write(saveFile, "The words are not important to the plot.")
 
   local error = nil
 
-  saveFile, error = love.filesystem.openFile("save.dat", "r")
-  saveFile:read()
-
-  saveFile:close()
+  saveFile, error = love.filesystem.read(saveFile)
 
   print(error)
+  love.audio.stop(sfx.load)
 end
