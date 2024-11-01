@@ -1,7 +1,5 @@
 local nest = require("nest").init({ console = "3ds", scale = 1 })
--- local tove = require("tove")
-local editor = require("editor")
-local stage = require("stage")
+local json = require("json")
 
 stageWidth = 480
 stageHeight = 360
@@ -9,7 +7,7 @@ stageScale = 1.52
 depthEnabled = false
 clickCoords = "None"
 
-scene = "editor"
+scene = "editor:code"
 frame = 0
 
 color = {
@@ -29,8 +27,16 @@ color = {
       g = 76 /255,
       b = 76 /255,
     },
-
-
+    orange = {
+      r = 255 /255, 
+      g = 140 /255,
+      b = 26 /255,
+    },
+    black = {
+      r = 29 /255, 
+      g = 40 /255,
+      b = 61 /255,
+    },
   }, bg = {
     r = 1, 
     g = 1,
@@ -38,8 +44,10 @@ color = {
   },
 }
 
+currentAccent = color.accent.purple
+
 sceneList = {
-  "editor", "extentions"
+  "editor:code", "extentions"
 }
 
 icons = {
@@ -63,6 +71,7 @@ icons = {
   snd = love.graphics.newImage("assets/snd.png"),
   spr = love.graphics.newImage("assets/spr.png"),
   close = love.graphics.newImage("assets/x1.png"),
+  closeStart = love.graphics.newImage("assets/xStart.png"),
 }
 sfx = {
   select = love.audio.newSource("assets/SFX/Ready.wav", "static"),
@@ -136,7 +145,52 @@ button = {
       height = 26,
       enabled=true
     },
-  }
+    backToProjList = {
+      x = 12, 
+      y = 12 + 26 * 6 + topPanelY,
+      width = bottomDimensions.width - 12 * 2, 
+      height = 26,
+      enabled=true
+    },
+  },
+  settings = {
+    accent = {
+      x = 12, 
+      y = 12 + topPanelY,
+      width = bottomDimensions.width - 12 * 2, 
+      height = 26,
+      enabled=true,
+
+      red = {
+        x = 12, 
+        y = 12 + 26 * 1 + topPanelY,
+        width = bottomDimensions.width - 12 * 2, 
+        height = 26,
+        enabled=true
+      },
+      blue = {
+        x = 12, 
+        y = 12 + 26 * 2 + topPanelY,
+        width = bottomDimensions.width - 12 * 2, 
+        height = 26,
+        enabled=true
+      },
+      purple = {
+        x = 12, 
+        y = 12 + 26 * 3 + topPanelY,
+        width = bottomDimensions.width - 12 * 2, 
+        height = 26,
+        enabled=true
+      },
+      orange = {
+        x = 12, 
+        y = 12 + 26 * 3 + topPanelY,
+        width = bottomDimensions.width - 12 * 2, 
+        height = 26,
+        enabled=true
+      },
+    },
+  },
 }
 
 function love.load()
@@ -145,6 +199,7 @@ function love.load()
   button.ext = {x = 0, y = bottomDimensions.height, width = 40, height = 40, enabled=true, state="normal"}--Button object
 
   font = love.graphics.newFont(12)
+  fontBig = love.graphics.newFont(24)
   
 end
 
@@ -157,6 +212,20 @@ function love.draw(screen)
   button.startMenu.sprite.y = 12 + 26 * 4 + topPanelY
   button.startMenu.file.y = 12 + 26 * 5 + topPanelY
   button.startMenu.setting.y = 12 + 26 * 6 + topPanelY
+  button.startMenu.backToProjList.y = 12 + 26 * 7 + topPanelY
+
+  button.settings.y = 12 + topPanelY
+
+  button.settings.accent.y = 12 + 30 * 1 + topPanelY
+
+  button.settings.accent.red.y = 12 + 30 * 1 + topPanelY
+  button.settings.accent.blue.y = 12 + 30 * 2 + topPanelY
+  button.settings.accent.purple.y = 12 + 30 * 3 + topPanelY
+  button.settings.accent.orange.y = 12 + 30 * 4 + topPanelY
+
+
+  
+
 
 
   local sysDepth = love.graphics.getDepth() -- -love.graphics.getDepth()
@@ -171,7 +240,7 @@ function love.draw(screen)
     sysDepth = -sysDepth
   end
 
-  if scene == "editor" then
+  if scene == "editor:code" then
     if screen == "bottom" then -- render bottom screen
     
       love.graphics.setColor(229/255,240/255,1)
@@ -181,7 +250,7 @@ function love.draw(screen)
       love.graphics.rectangle("line", 0, 31, 40, height)
 
       -- Extentions Button
-      love.graphics.setColor(color.accent.purple.r, color.accent.purple.g, color.accent.purple.b)
+      love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
       love.graphics.rectangle("fill", button.ext.x, button.ext.y - button.ext.height, button.ext.width, button.ext.height)    
       love.graphics.setColor(1,1,1)
 
@@ -204,15 +273,15 @@ function love.draw(screen)
   end
 
   if scene == "extentions" then
-    love.graphics.setBackgroundColor(color.accent.purple.r, color.accent.purple.g, color.accent.purple.b, topPanelY / -40 + 0.5)
+    love.graphics.setBackgroundColor(currentAccent.r, currentAccent.g, currentAccent.b, topPanelY / -40 + 0.5)
 
     if screen == "bottom" then -- render bottom screen
       love.graphics.setColor(1,1,1)
-      love.graphics.print("Extentions", 320 / 2 - font:getWidth("Extentions") / 2, 10 - topPanelY)
+      love.graphics.print("Choose an Extention", 320 / 2 - font:getWidth("Choose an Extention") / 2, 10 - topPanelY)
 
       love.graphics.setColor(1,1,1)
       love.graphics.rectangle("fill", button.ext.x, button.ext.y - button.ext.height, button.ext.width, button.ext.height)    
-      love.graphics.setColor(color.accent.purple.r, color.accent.purple.g, color.accent.purple.b)
+      love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
 
       love.graphics.draw(icons.close, button.ext.width / 2 + button.ext.x - icons.close:getWidth() / 2 , button.ext.y - button.ext.height / 2 - icons.close:getHeight() / 2 )
     end
@@ -234,25 +303,37 @@ function love.draw(screen)
   end
 
   if scene == "settings" then
-    love.graphics.setBackgroundColor(color.accent.purple.r, color.accent.purple.g, color.accent.purple.b, topPanelY / -40 + 0.5)
+    love.graphics.setBackgroundColor(currentAccent.r, currentAccent.g, currentAccent.b, topPanelY / -40 + 0.5)
 
     if screen == "bottom" then -- render bottom screen
       love.graphics.setColor(1,1,1)
-      love.graphics.print("Settings", 320 / 2 - font:getWidth("Settings") / 2, 10 - topPanelY)
-
       love.graphics.setColor(1,1,1)
       love.graphics.rectangle("fill", button.ext.x, button.ext.y - button.ext.height, button.ext.width, button.ext.height)    
-      love.graphics.setColor(color.accent.purple.r, color.accent.purple.g, color.accent.purple.b)
+      love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
 
       love.graphics.draw(icons.close, button.ext.width / 2 + button.ext.x - icons.close:getWidth() / 2 , button.ext.y - button.ext.height / 2 - icons.close:getHeight() / 2 )
+
+      -- !! Buttons !! --
+
+      -- code
+      love.graphics.setColor(1,1,1,0.3)
+      love.graphics.rectangle("fill", button.settings.accent.x,button.settings.accent.y - button.settings.accent.height, button.settings.accent.width, button.settings.accent.height) 
+      love.graphics.setColor(1,1,1)
+
+      love.graphics.draw(icons.cost, button.settings.accent.x + 5, button.settings.accent.y + 2 - button.settings.accent.height)
+      love.graphics.print("Accent", button.settings.accent.x + 30,button.settings.accent.y + 5 - button.settings.accent.height)
     end
     
     if screen ~= "bottom" then -- render top screen
 
       love.graphics.setColor(1,1,1)
-      love.graphics.draw(icons.n3DS, width / 2 - icons.n3DS:getWidth() / 2 - sysDepth * 5, height / 2 - icons.n3DS:getHeight() / 2 + topPanelY)
+      love.graphics.setFont(fontBig)
+      love.graphics.print("Settings", width / 2 - fontBig:getWidth("Settings") / 2, height - fontBig:getHeight() - 5 - topPanelY)
+      love.graphics.setFont(font)
+
+
+      love.graphics.draw(icons.set, width - icons.set:getWidth() - 5, height - icons.set:getHeight() + topPanelY - 5)
       topPanelY = topPanelY / 1.4
-      love.graphics.print("Placeholder", 165, 60 + topPanelY / 2)
 
       love.graphics.print(screen, 5, 5)
       love.graphics.print(bp, 5, 15)
@@ -263,7 +344,62 @@ function love.draw(screen)
     end
   end
 
+  if scene == "settings:accent" then
+    love.graphics.setBackgroundColor(currentAccent.r, currentAccent.g, currentAccent.b, topPanelY / -40 + 0.5)
 
+    if screen == "bottom" then -- render bottom screen
+      love.graphics.setColor(1,1,1)
+      love.graphics.setColor(1,1,1)
+      love.graphics.rectangle("fill", button.ext.x, button.ext.y - button.ext.height, button.ext.width, button.ext.height)    
+      love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
+
+      love.graphics.draw(icons.close, button.ext.width / 2 + button.ext.x - icons.close:getWidth() / 2 , button.ext.y - button.ext.height / 2 - icons.close:getHeight() / 2 )
+
+      -- !! Buttons !! --
+
+      -- red
+      love.graphics.setColor(color.accent.red.r, color.accent.red.g, color.accent.red.b)
+      love.graphics.rectangle("fill", button.settings.accent.red.x,button.settings.accent.red.y - button.settings.accent.red.height, button.settings.accent.red.width, button.settings.accent.red.height) 
+      love.graphics.setColor(1,1,1)
+      love.graphics.print("Turbowarp Red", button.settings.accent.red.x + 30,button.settings.accent.red.y + 5 - button.settings.accent.red.height)
+
+      -- blue
+      love.graphics.setColor(color.accent.blue.r, color.accent.blue.g, color.accent.blue.b)
+      love.graphics.rectangle("fill", button.settings.accent.blue.x,button.settings.accent.blue.y - button.settings.accent.blue.height, button.settings.accent.blue.width, button.settings.accent.blue.height) 
+      love.graphics.setColor(1,1,1)
+      love.graphics.print("Scratch Blue", button.settings.accent.blue.x + 30,button.settings.accent.blue.y + 5 - button.settings.accent.blue.height)
+
+      -- purple
+      love.graphics.setColor(color.accent.purple.r, color.accent.purple.g, color.accent.purple.b)
+      love.graphics.rectangle("fill", button.settings.accent.purple.x,button.settings.accent.purple.y - button.settings.accent.purple.height, button.settings.accent.purple.width, button.settings.accent.purple.height) 
+      love.graphics.setColor(1,1,1)
+      love.graphics.print("Scratch Purple", button.settings.accent.purple.x + 30,button.settings.accent.purple.y + 5 - button.settings.accent.purple.height)
+
+      -- purple
+      love.graphics.setColor(color.accent.orange.r, color.accent.orange.g, color.accent.orange.b)
+      love.graphics.rectangle("fill", button.settings.accent.orange.x,button.settings.accent.orange.y - button.settings.accent.orange.height, button.settings.accent.orange.width, button.settings.accent.orange.height) 
+      love.graphics.setColor(1,1,1)
+      love.graphics.print("Scratch Orange", button.settings.accent.orange.x + 30,button.settings.accent.orange.y + 5 - button.settings.accent.orange.height)
+    end
+    
+    if screen ~= "bottom" then -- render top screen
+
+      love.graphics.setColor(1,1,1)
+      love.graphics.setFont(fontBig)
+      love.graphics.print("Settings / Accent", width / 2 - fontBig:getWidth("Settings / Accent") / 2, height - fontBig:getHeight() - 5 - topPanelY)
+      love.graphics.setFont(font)
+
+      love.graphics.draw(icons.set, width - icons.set:getWidth() - 5, height - icons.set:getHeight() + topPanelY - 5)
+      topPanelY = topPanelY / 1.4
+
+      love.graphics.print(screen, 5, 5)
+      love.graphics.print(bp, 5, 15)
+
+      love.graphics.print(button.extClicks, 5, 25)
+      love.graphics.print(clickCoords, 5, 35)
+
+    end
+  end
 
   if scene == "startMenu" then
     if screen == "bottom" then -- render bottom screen
@@ -273,7 +409,7 @@ function love.draw(screen)
       love.graphics.line(0, 31, width, 31)
       love.graphics.rectangle("line", 0, 31, 40, height)
 
-      love.graphics.setColor(color.accent.purple.r, color.accent.purple.g, color.accent.purple.b)
+      love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
       love.graphics.rectangle("fill", button.ext.x, button.ext.y - button.ext.height, button.ext.width, button.ext.height)    
       love.graphics.setColor(1,1,1)
 
@@ -281,11 +417,14 @@ function love.draw(screen)
 
       love.graphics.setColor(0,0,0,topPanelY / -40 + 0.7)
       love.graphics.rectangle("fill", 0,0, width, height) 
-      love.graphics.setColor(color.accent.purple.r,color.accent.purple.g,color.accent.purple.b)
+      love.graphics.setColor(currentAccent.r,currentAccent.g,currentAccent.b)
       love.graphics.rectangle("fill", 10,10 + topPanelY, 320 - 20, 240 - 20) 
       love.graphics.setColor(1,1,1, 0.2)
       love.graphics.rectangle("line", 11,11 + topPanelY, 320 - 22, 240 - 22) 
-      topPanelY = topPanelY / 1.4
+
+      if scene == "startMenu" then
+        topPanelY = topPanelY / 1.4
+      end
 
       -- !! Buttons start here !! --
 
@@ -337,6 +476,14 @@ function love.draw(screen)
       love.graphics.draw(icons.set, button.startMenu.setting.x + 5, button.startMenu.setting.y + 2 - button.startMenu.code.height)
       love.graphics.print("Settings", button.startMenu.setting.x + 30,button.startMenu.setting.y + 5 - button.startMenu.code.height)
 
+      -- back to project list
+      love.graphics.setColor(0,0,0,0.1)
+      love.graphics.rectangle("fill", button.startMenu.backToProjList.x,button.startMenu.backToProjList.y - button.startMenu.code.height, button.startMenu.backToProjList.width, button.startMenu.backToProjList.height) 
+      love.graphics.setColor(1,1,1)
+
+      love.graphics.draw(icons.closeStart, button.startMenu.backToProjList.x + 5, button.startMenu.backToProjList.y + 2 - button.startMenu.code.height)
+      love.graphics.print("Quit to Project List", button.startMenu.backToProjList.x + 30,button.startMenu.backToProjList.y + 5 - button.startMenu.code.height)
+
     end
     
     if screen ~= "bottom" then -- render top screen
@@ -357,7 +504,7 @@ function love.draw(screen)
       love.graphics.print(button.extClicks, 5, 25)
       love.graphics.print(clickCoords, 5, 35)
 
-      love.graphics.setColor(color.accent.purple.r,color.accent.purple.g,color.accent.purple.b)
+      love.graphics.setColor(currentAccent.r,currentAccent.g,currentAccent.b)
       love.graphics.rectangle("fill", 0,height - 40 + topPanelY, width, 40) 
       love.graphics.setColor(1,1,1)
       love.graphics.setFont(font)
@@ -375,7 +522,7 @@ end
 function love.gamepadpressed(joystick, button)
   love.graphics.setColor(0,0,1)
   bp = button
-  if scene == "editor" then
+  if scene == "editor:code" then
     if button == "rightshoulder" then
       depthEnabled = not depthEnabled
       love.graphics.set3D(depthEnabled)
@@ -389,7 +536,7 @@ function love.gamepadpressed(joystick, button)
       --love.keyboard.setTextInput(true, {
       --  hint = "type word ;)"
       --})
-      save()
+      save("proj")
     end
     
     if button == "start" then
@@ -415,31 +562,90 @@ function love.gamepadpressed(joystick, button)
       startMenu("close")
     end
   end
+
+  if scene == "settings:accent" then
+    if button == "b" then
+      love.audio.play(sfx.back)
+      scene = "settings"
+    end
+  end
+
+  if scene == "settings" then
+    if button == "b" then
+      love.audio.play(sfx.back)
+      scene = "editor:code"
+    end
+  end
 end
 
 function love.touchpressed(id, x, y, dx, dy, pressure)
   love.graphics.setColor(0,0,0)
   clickCoords = {x,", ",y }
   love.graphics.print(x,y)
+
   -- extentions
-  if x > button.ext.x and x < button.ext.x + button.ext.width and y < button.ext.y and y > button.ext.y - button.ext.height and button.ext.enabled then -- Checks if the mouse is on the button
-    if button.ext.state == "normal" then
-      openExt()
-    end
-    if button.ext.state == "close" then
-      closeExt()
+  if scene == "editor:code" or scene == "extentions" then
+    if x > button.ext.x and x < button.ext.x + button.ext.width and y < button.ext.y and y > button.ext.y - button.ext.height and button.ext.enabled then -- Checks if the mouse is on the button
+      if button.ext.state == "normal" then
+        openExt()
+      end
+      if button.ext.state == "close" then
+        closeExt()
+      end
     end
   end
-  -- file
-  if x > button.startMenu.file.x and x < button.startMenu.file.x + button.startMenu.file.width and y < button.startMenu.file.y and y > button.startMenu.file.y - button.startMenu.file.height then 
-    clickCoords = {x,", ",y, ":file"}
-    startMenu("close")
-    save()
+
+  if scene == "startMenu" then
+    -- file
+    if x > button.startMenu.file.x and x < button.startMenu.file.x + button.startMenu.file.width and y < button.startMenu.file.y and y > button.startMenu.file.y - button.startMenu.file.height then 
+      clickCoords = {x,", ",y, ":file"}
+      love.audio.play(sfx.select)
+      startMenu("close")
+      save()
+    end
+    -- settings
+    if x > button.startMenu.setting.x and x < button.startMenu.setting.x + button.startMenu.setting.width and y < button.startMenu.setting.y and y > button.startMenu.setting.y - button.startMenu.setting.height then 
+      topPanelY = 30
+      love.audio.play(sfx.select)
+      switchSceneTo("settings")
+    end
   end
-  -- settings
-  if x > button.startMenu.setting.x and x < button.startMenu.setting.x + button.startMenu.setting.width and y < button.startMenu.setting.y and y > button.startMenu.setting.y - button.startMenu.setting.height then 
-    topPanelY = 30
-    switchSceneTo("settings")
+
+  if scene == "settings" then
+    -- settings : accent
+    if x > button.settings.accent.x and x < button.settings.accent.x + button.settings.accent.width and y < button.settings.accent.y and y > button.settings.accent.y - button.settings.accent.height then 
+      topPanelY = 30
+      love.audio.play(sfx.select)
+      switchSceneTo("settings:accent")
+      button.settings.accent.enabled = false
+    end
+  end
+
+  if scene == "settings:accent" then
+
+    -- settings : accent : red
+    if x > button.settings.accent.red.x and x < button.settings.accent.red.x + button.settings.accent.red.width and y < button.settings.accent.red.y and y > button.settings.accent.red.y - button.settings.accent.red.height then 
+      currentAccent = color.accent.red
+      love.audio.play(sfx.select)
+    end
+
+    -- settings : accent : purple
+    if x > button.settings.accent.purple.x and x < button.settings.accent.purple.x + button.settings.accent.purple.width and y < button.settings.accent.purple.y and y > button.settings.accent.purple.y - button.settings.accent.purple.height then 
+      currentAccent = color.accent.purple
+      love.audio.play(sfx.select)
+    end
+
+    -- settings : accent : blue
+    if x > button.settings.accent.blue.x and x < button.settings.accent.blue.x + button.settings.accent.blue.width and y < button.settings.accent.blue.y and y > button.settings.accent.blue.y - button.settings.accent.blue.height then 
+      currentAccent = color.accent.blue
+      love.audio.play(sfx.select)
+    end
+
+    -- settings : accent : orange
+    if x > button.settings.accent.orange.x and x < button.settings.accent.orange.x + button.settings.accent.orange.width and y < button.settings.accent.orange.y and y > button.settings.accent.orange.y - button.settings.accent.orange.height then 
+      currentAccent = color.accent.orange
+      love.audio.play(sfx.select)
+    end
   end
 end
 
@@ -453,7 +659,7 @@ end
 
 function closeExt()
   love.audio.play(sfx.back)
-  switchSceneTo("editor")
+  switchSceneTo("editor:code")
   -- love.audio.play(sfx.fadeOut)
   button.ext.state = "normal"
 end
@@ -465,7 +671,7 @@ function startMenu(state)
     love.audio.play(sfx.fadeIn)
   end
   if state == "close" then
-    switchSceneTo("editor")
+    switchSceneTo("editor:code")
     love.audio.play(sfx.fadeOut)
   end
 end
@@ -474,22 +680,25 @@ function switchSceneTo(ID)
   scene = ID
 end
 
-function save()
+function save(type)
   love.audio.play(sfx.load)
-  savefolder = "projects"
-  saveLocation = "./"..savefolder.."/"
 
-  if not love.filesystem.getInfo(saveLocation) then
-    love.filesystem.createDirectory(savefolder)
+  if type == "proj" then 
+    savefolder = "projects"
+    saveLocation = "./"..savefolder.."/"
+
+    if not love.filesystem.getInfo(saveLocation) then
+      love.filesystem.createDirectory(savefolder)
+    end
+
+    local saveFile = saveLocation.."save.txt"
+    love.filesystem.write(saveFile, "The words are not important to the plot.")
+
+    local error = nil
+
+    saveFile, error = love.filesystem.read(saveFile)
+
+    print(error)
   end
-
-  local saveFile = saveLocation.."save.txt"
-  love.filesystem.write(saveFile, "The words are not important to the plot.")
-
-  local error = nil
-
-  saveFile, error = love.filesystem.read(saveFile)
-
-  print(error)
   love.audio.stop(sfx.load)
 end
