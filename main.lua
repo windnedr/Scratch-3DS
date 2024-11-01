@@ -1,4 +1,4 @@
-local nest = require("nest").init({ console = "3ds", scale = 1 })
+local nest = require("nest").init({ console = "3ds", scale = 2 })
 -- local tove = require("tove")
 local editor = require("editor")
 local stage = require("stage")
@@ -7,7 +7,6 @@ stageWidth = 480
 stageHeight = 360
 stageScale = 1.52
 depthEnabled = false
-ExtButtonClicks = 0
 clickCoords = "None"
 
 scene = "editor"
@@ -15,9 +14,22 @@ frame = 0
 
 color = {
   accent = {
-    r = 133/255, 
-    g = 92/255,
-    b = 214/255,
+    purple = {
+      r = 133 /255, 
+      g = 92 /255,
+      b = 214 /255,
+    }, 
+    blue = {
+      r = 77 /255, 
+      g = 151 /255,
+      b = 255 /255,
+    },
+    red = {
+      r = 255 /255, 
+      g = 76 /255,
+      b = 76 /255,
+    },
+
 
   }, bg = {
     r = 1, 
@@ -31,14 +43,26 @@ sceneList = {
 }
 
 icons = {
-  ext = love.graphics.newImage("assets/ext.png"),
 
   -- 3DS
   n3DS = love.graphics.newImage("assets/3ds/n3DS.png"),
   n3DSTrans = love.graphics.newImage("assets/3ds/n3DSTrans.png"),
   o3DS = love.graphics.newImage("assets/3ds/o3DS.png"),
   o3DSTrans = love.graphics.newImage("assets/3ds/o3DSTrans.png"),
+  nBottom = love.graphics.newImage("assets/3ds/NBottom.png"),
+  nBottomTrans = love.graphics.newImage("assets/3ds/NBottomTrans.png"),
+  oBottom = love.graphics.newImage("assets/3ds/OBottom.png"),
+  oBottomTrans = love.graphics.newImage("assets/3ds/OBottomTrans.png"),
 
+  -- Icons
+  code = love.graphics.newImage("assets/code.png"),
+  cost = love.graphics.newImage("assets/costume.png"),
+  ext = love.graphics.newImage("assets/ext.png"),
+  file = love.graphics.newImage("assets/file.png"),
+  set = love.graphics.newImage("assets/setting.png"),
+  snd = love.graphics.newImage("assets/snd.png"),
+  spr = love.graphics.newImage("assets/spr.png"),
+  close = love.graphics.newImage("assets/x1.png"),
 }
 sfx = {
   select = love.audio.newSource("assets/SFX/Ready.wav", "static"),
@@ -52,17 +76,51 @@ sfx = {
 cat = love.graphics.rectangle("fill", 5, 5, 62, 118)
 bp = love._os
 
-bottomDimensions = {width=0,height=0}
+topPanelY = 40
+
+bottomDimensions = {width=320,height=240}
+
+button = {
+  ext = {
+    x = 0, 
+    y = bottomDimensions.height,
+    width = 40, 
+    height = 40,
+    enabled=true,
+    state="normal"
+  },
+  startMenu = {
+    code = {
+      x = 12, 
+      y = 12 + topPanelY,
+      width = bottomDimensions.width - 12 * 2, 
+      height = 26,
+      enabled=true
+    },
+    costume = {
+      x = 11, 
+      y = 11 + topPanelY,
+      width = 40, 
+      height = 40,
+      enabled=true
+    },
+  }
+}
 
 function love.load()
   love.graphics.set3D(depthEnabled)
   bottomDimensions.width, bottomDimensions.height = love.graphics.getDimensions(bottom)
-  extButton = {x = 0, y = bottomDimensions.height, width = 40, height = 40, enabled=true}--Button object
+  button.ext = {x = 0, y = bottomDimensions.height, width = 40, height = 40, enabled=true, state="normal"}--Button object
+
+  font = love.graphics.newFont(12)
   
 end
 
 function love.draw(screen)
-  local sysDepth = 1 -- -love.graphics.getDepth()
+  button.extClicks = scene
+  button.startMenu.code.y = 12 + topPanelY
+
+  local sysDepth = love.graphics.getDepth() -- -love.graphics.getDepth()
 
   local width, height = love.graphics.getDimensions(screen)
   depthSlider = math.floor(love.graphics.getDepth() * 100)
@@ -84,11 +142,11 @@ function love.draw(screen)
       love.graphics.rectangle("line", 0, 31, 40, height)
 
       -- Extentions Button
-      love.graphics.setColor(color.accent.r, color.accent.g, color.accent.b)
-      love.graphics.rectangle("fill", extButton.x, extButton.y - extButton.height, extButton.width, extButton.height)    
+      love.graphics.setColor(color.accent.purple.r, color.accent.purple.g, color.accent.purple.b)
+      love.graphics.rectangle("fill", button.ext.x, button.ext.y - button.ext.height, button.ext.width, button.ext.height)    
       love.graphics.setColor(1,1,1)
 
-      love.graphics.draw(icons.ext, extButton.width / 2 + extButton.x - icons.ext:getWidth() / 2 , extButton.y - extButton.height / 2 - icons.ext:getHeight() / 2 )
+      love.graphics.draw(icons.ext, button.ext.width / 2 + button.ext.x - icons.ext:getWidth() / 2 , button.ext.y - button.ext.height / 2 - icons.ext:getHeight() / 2 )
     end
     
     if screen ~= "bottom" then -- render top screen
@@ -98,34 +156,101 @@ function love.draw(screen)
       love.graphics.rectangle("fill", width / 2 - 62/stageScale/2, height/2  - 118/stageScale/2, 62/stageScale, 118/stageScale) 
       love.graphics.print(screen, 5, 5)
       love.graphics.print(bp, 5, 15)
+      love.graphics.print(button.ext.state, 5, 45)
 
-      love.graphics.print(ExtButtonClicks, 5, 25)
+      love.graphics.print(button.extClicks, 5, 25)
       love.graphics.print(clickCoords, 5, 35)
 
     end
   end
 
   if scene == "extentions" then
-    love.graphics.setBackgroundColor(color.accent.r, color.accent.g, color.accent.b)
-    font = love.graphics.newFont(24)
+    love.graphics.setBackgroundColor(color.accent.purple.r, color.accent.purple.g, color.accent.purple.b, topPanelY / -40 + 0.5)
 
     if screen == "bottom" then -- render bottom screen
       love.graphics.setColor(1,1,1)
-      love.graphics.print("Extentions",320 / 2 - font:getWidth("hehe") / 2, 10)
+      love.graphics.print("Extentions", 320 / 2 - font:getWidth("Extentions") / 2, 10 - topPanelY)
+
+      love.graphics.setColor(1,1,1)
+      love.graphics.rectangle("fill", button.ext.x, button.ext.y - button.ext.height, button.ext.width, button.ext.height)    
+      love.graphics.setColor(color.accent.purple.r, color.accent.purple.g, color.accent.purple.b)
+
+      love.graphics.draw(icons.close, button.ext.width / 2 + button.ext.x - icons.close:getWidth() / 2 , button.ext.y - button.ext.height / 2 - icons.close:getHeight() / 2 )
     end
     
     if screen ~= "bottom" then -- render top screen
-    love.graphics.setColor(1,1,1)
-      love.graphics.draw(icons.n3DS, width / 2 - icons.n3DS:getWidth() / 2 - sysDepth * 5, height / 2 - icons.n3DS:getHeight() / 2)
-      love.graphics.print("Placeholder", 165, 60)
+
+      love.graphics.setColor(1,1,1)
+      love.graphics.draw(icons.n3DS, width / 2 - icons.n3DS:getWidth() / 2 - sysDepth * 5, height / 2 - icons.n3DS:getHeight() / 2 + topPanelY)
+      topPanelY = topPanelY / 1.4
+      love.graphics.print("Placeholder", 165, 60 + topPanelY / 2)
 
       love.graphics.print(screen, 5, 5)
       love.graphics.print(bp, 5, 15)
 
-      love.graphics.print(ExtButtonClicks, 5, 25)
+      love.graphics.print(button.extClicks, 5, 25)
       love.graphics.print(clickCoords, 5, 35)
+
     end
   end
+
+
+  if scene == "startMenu" then
+    if screen == "bottom" then -- render bottom screen
+      love.graphics.setColor(229/255,240/255,1)
+      love.graphics.rectangle("fill", 0,0, width, 30)
+      love.graphics.setColor(195/255, 204/255, 217/255)
+      love.graphics.line(0, 31, width, 31)
+      love.graphics.rectangle("line", 0, 31, 40, height)
+
+      love.graphics.setColor(color.accent.purple.r, color.accent.purple.g, color.accent.purple.b)
+      love.graphics.rectangle("fill", button.ext.x, button.ext.y - button.ext.height, button.ext.width, button.ext.height)    
+      love.graphics.setColor(1,1,1)
+
+      love.graphics.draw(icons.ext, button.ext.width / 2 + button.ext.x - icons.ext:getWidth() / 2 , button.ext.y - button.ext.height / 2 - icons.ext:getHeight() / 2 )
+
+      love.graphics.setColor(0,0,0,topPanelY / -40 + 0.7)
+      love.graphics.rectangle("fill", 0,0, width, height) 
+      love.graphics.setColor(color.accent.purple.r,color.accent.purple.g,color.accent.purple.b)
+      love.graphics.rectangle("fill", 10,10 + topPanelY, 320 - 20, 240 - 20) 
+      love.graphics.setColor(1,1,1, 0.2)
+      love.graphics.rectangle("line", 11,11 + topPanelY, 320 - 22, 240 - 22) 
+      topPanelY = topPanelY / 1.4
+
+      love.graphics.setColor(color.accent.purple.r / 2,color.accent.purple.g / 2,color.accent.purple.b / 2)
+      love.graphics.rectangle("fill", button.startMenu.code.x,button.startMenu.code.y, button.startMenu.code.width, button.startMenu.code.height) 
+
+    end
+    
+    if screen ~= "bottom" then -- render top screen
+      love.graphics.setColor(195/255, 204/255, 217/255)
+      love.graphics.rectangle("line", width / 2 - stageWidth/stageScale/2, height / 2 - stageHeight/stageScale/2 , stageWidth/stageScale, stageHeight/stageScale)
+      love.graphics.setColor(0.5,0.5,0.5)
+      love.graphics.rectangle("fill", width / 2 - 62/stageScale/2, height/2  - 118/stageScale/2, 62/stageScale, 118/stageScale) 
+
+      love.graphics.setColor(0,0,0,topPanelY / -40 + 0.7)
+
+      love.graphics.rectangle("fill", 0,0, width, height) 
+
+      love.graphics.setColor(1,1,1)
+
+      love.graphics.print(screen, 5, 5)
+      love.graphics.print(bp, 5, 15)
+
+      love.graphics.print(button.extClicks, 5, 25)
+      love.graphics.print(clickCoords, 5, 35)
+
+      love.graphics.setColor(color.accent.purple.r,color.accent.purple.g,color.accent.purple.b)
+      love.graphics.rectangle("fill", 0,height - 40 + topPanelY, width, 40) 
+      love.graphics.setColor(1,1,1)
+      love.graphics.setFont(font)
+      love.graphics.print("Select Menu", width / 2 - font:getWidth("Select Menu") / 2, height - 20 - font:getHeight() / 2 + topPanelY / 2)
+    end
+  end
+end
+
+function love.update()
+
 end
 
 -- !! END OF DRAW !! --
@@ -152,6 +277,9 @@ function love.gamepadpressed(joystick, button)
     if button == "start" then
       love.event.quit()
     end
+    if button == "select" then
+      startMenu("open")
+    end
   end
 
   if scene == "extentions" then
@@ -162,8 +290,12 @@ function love.gamepadpressed(joystick, button)
     if button == "y" then
       success = love.system.openURL( "https://scratch.mit.edu/" )
     end
-    
+  end
 
+  if scene == "startMenu" then
+    if button == "b" then
+      startMenu("close")
+    end
   end
 end
 
@@ -171,26 +303,61 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
   love.graphics.setColor(0,0,0)
   clickCoords = {x,", ",y }
   love.graphics.print(x,y)
-  if x > extButton.x and x < extButton.x + extButton.width and
-  y < extButton.y and y > extButton.y - extButton.height and extButton.enabled then -- Checks if the mouse is on the button
+  if x > button.ext.x and x < button.ext.x + button.ext.width and
+  y < button.ext.y and y > button.ext.y - button.ext.height and button.ext.enabled then -- Checks if the mouse is on the button
+  
+    if button.ext.state == "normal" then
       openExt()
     end
+    if button.ext.state == "close" then
+      closeExt()
+    end
+  end
 end
 
 function openExt()
+  topPanelY = 20
   love.audio.play(sfx.select)
   switchSceneTo("extentions")
   -- love.audio.play(sfx.fadeIn)
-  extButton.enabled = false
+  button.ext.state = "close"
 end
 
 function closeExt()
   love.audio.play(sfx.back)
   switchSceneTo("editor")
   -- love.audio.play(sfx.fadeOut)
-  extButton.enabled = true
+  button.ext.state = "normal"
+end
+
+function startMenu(state)
+  if state == "open" then
+    topPanelY = 20
+    switchSceneTo("startMenu")
+    love.audio.play(sfx.fadeIn)
+  end
+  if state == "close" then
+    switchSceneTo("editor")
+    love.audio.play(sfx.fadeOut)
+  end
 end
 
 function switchSceneTo(ID)
   scene = ID
+end
+
+function save()
+  saveLocation = "./projects"
+
+  local saveFile = love.filesystem.openFile("save.txt", "w")
+  savefile:write("The words are not important to the plot.")
+
+  local error = nil
+
+  saveFile, error = love.filesystem.openFile("save.dat", "r")
+  saveFile:read()
+
+  saveFile:close()
+
+  print(error)
 end
