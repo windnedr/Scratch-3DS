@@ -52,7 +52,8 @@ in no specific order:
 - [ ] Usable SVG <br>
 - [ ] Rendering <br>
 - [x] Stage <br>
-- [ ] Settings <br>
+- [x] Settings <br>
+- [x] Quick Menu <br>
 - [ ] Editor <br>
   - [ ] Switching to Code <br>
   - [ ] Switching to Costumes <br>
