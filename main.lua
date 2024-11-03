@@ -19,7 +19,7 @@ projData = {
   targets ={{
     isStage = true,
     name = "Stage",
-    variables = {},
+    variables = {myvariable = {"my variable",0}},
     lists = {},
     broadcasts = {},
     blocks = {},
@@ -240,23 +240,46 @@ button = {
   },
 }
 
+-- !!        THIS HANDLES SB3 FILES DIRECTLY         !! --
+-- !! DO NOT EDIT UNLESS YOU KNOW WHAT YOU'RE DOING. !! --
+
 projData = {
   targets ={{
     isStage = true,
     name = "Stage",
-    variables = {},
-    lists = {},
-    broadcasts = {},
-    blocks = {},
-    comments = {},
+    variables = {myvariable={"the",0}},
+    lists = {list={"list",{}}},
+    broadcasts = {message1 = "message1"},
+    blocks = {
+      a = {
+        opcode = "event_whenflagclicked",
+        next = nil,
+        parent = nil,
+        inputs = nil,
+        fields = nil,
+        shadow = false,
+        topLevel = true,
+        x = 0,
+        y = 0,
+      }
+    },
+    comments = {a = {
+      blockId = nil,
+      x = 100,
+      y = 100,
+      width = 200,
+      height = 200,
+      minimized = false,
+      text = "This is a comment"
+    }},
     currentCostume = 0,
     costumes = {{
       name = "backdrop1",
       dataFormat = "png",
-      assetId = nil,
+      assetId = "cd21514d0531fdffb22204e0ec5ed84a",
       md5ext = nil
     }},
-    sounds = {{}},
+    sounds = {},
     volume = 100,
     layerOrder = 0,
     tempo = 60,
@@ -276,7 +299,11 @@ projData = {
   meta = {
     semver = "3.0.0",
     vm = "4.8.32",
-    agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+    agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+    platform = {
+      name = "Scratch-3DS",
+      url = "https://github.com/windnedr/scratch-3ds"
+    }
   }
 }
 
@@ -293,6 +320,9 @@ function love.load()
   log("Load")
 
   json.decode("{}")
+
+  log(love._console.." running on: "..love._os)
+  log(projData.targets[1].variables.myvariable[1])
   
 end
 
@@ -316,8 +346,6 @@ function love.draw(screen)
   button.settings.accent.purple.y = 12 + 30 * 3 + topPanelY
   button.settings.accent.orange.y = 12 + 30 * 4 + topPanelY
 
-
-  
 
 
   local sysDepth = love.graphics.getDepth() -- -love.graphics.getDepth()
@@ -872,7 +900,7 @@ function save(type)
       log("Creating dir: "..saveLocation)
     end
 
-    local saveFile = "project.json"
+    local saveFile = saveLocation.."project.json"
     love.filesystem.write(saveFile, json.encode(projData))
 
     local error = nil
