@@ -10,6 +10,51 @@ clickCoords = "None"
 scene = "editor:code"
 frame = 0
 
+theLog = "## LOG ##"
+prevScene = nil
+
+scroll = 0
+
+projData = {
+  targets ={{
+    isStage = true,
+    name = "Stage",
+    variables = {},
+    lists = {},
+    broadcasts = {},
+    blocks = {},
+    comments = {},
+    currentCostume = 0,
+    costumes = {{
+      name = "backdrop1",
+      dataFormat = "png",
+      assetId = nil,
+      md5ext = nil
+    }},
+    sounds = {{}},
+    volume = 100,
+    layerOrder = 0,
+    tempo = 60,
+    videoTransparency = 50,
+    videoState = "on",
+    textToSpeechLanguage = nil,
+    visible = true,
+    x = 0,
+    y = 0,
+    size = 100,
+    direction = 90,
+    draggable = false,
+    rotationStyle = "all around"
+  }},
+  monitors = {},
+  extensions = {},
+  meta = {
+    semver = "3.0.0",
+    vm = "4.8.32",
+    agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+  }
+}
+
 color = {
   accent = {
     purple = {
@@ -51,6 +96,7 @@ sceneList = {
 }
 
 icons = {
+  scr3DS = love.graphics.newImage("assets/scr3DSwordmark.png"),
 
   -- 3DS
   n3DS = love.graphics.newImage("assets/3ds/n3DS.png"),
@@ -72,6 +118,7 @@ icons = {
   spr = love.graphics.newImage("assets/spr.png"),
   close = love.graphics.newImage("assets/x1.png"),
   closeStart = love.graphics.newImage("assets/xStart.png"),
+  new = love.graphics.newImage("assets/+.png"),
 }
 sfx = {
   select = love.audio.newSource("assets/SFX/Ready.wav", "static"),
@@ -169,7 +216,7 @@ button = {
         enabled=true
       },
       blue = {
-        x = 12, 
+        x = 12,
         y = 12 + 26 * 2 + topPanelY,
         width = bottomDimensions.width - 12 * 2, 
         height = 26,
@@ -193,13 +240,59 @@ button = {
   },
 }
 
+projData = {
+  targets ={{
+    isStage = true,
+    name = "Stage",
+    variables = {},
+    lists = {},
+    broadcasts = {},
+    blocks = {},
+    comments = {},
+    currentCostume = 0,
+    costumes = {{
+      name = "backdrop1",
+      dataFormat = "png",
+      assetId = nil,
+      md5ext = nil
+    }},
+    sounds = {{}},
+    volume = 100,
+    layerOrder = 0,
+    tempo = 60,
+    videoTransparency = 50,
+    videoState = "on",
+    textToSpeechLanguage = nil,
+    visible = true,
+    x = 0,
+    y = 0,
+    size = 100,
+    direction = 90,
+    draggable = false,
+    rotationStyle = "all around"
+  }},
+  monitors = {},
+  extensions = {},
+  meta = {
+    semver = "3.0.0",
+    vm = "4.8.32",
+    agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+  }
+}
+
 function love.load()
-  love.graphics.set3D(depthEnabled)
+  if love._console == "3ds" then
+    love.graphics.set3D(depthEnabled)
+  end
   bottomDimensions.width, bottomDimensions.height = love.graphics.getDimensions(bottom)
   button.ext = {x = 0, y = bottomDimensions.height, width = 40, height = 40, enabled=true, state="normal"}--Button object
 
   font = love.graphics.newFont(12)
   fontBig = love.graphics.newFont(24)
+
+  log("Load")
+
+  json.decode("{}")
   
 end
 
@@ -227,11 +320,14 @@ function love.draw(screen)
   
 
 
-
   local sysDepth = love.graphics.getDepth() -- -love.graphics.getDepth()
 
   local width, height = love.graphics.getDimensions(screen)
-  depthSlider = math.floor(love.graphics.getDepth() * 100)
+  if love._console == "3ds" then
+    depthSlider = math.floor(love.graphics.getDepth() * 100)
+  else
+    depthSlider = 0
+  end
   love.graphics.setBackgroundColor(1,1,1)
 
   frame = frame + 1
@@ -511,6 +607,53 @@ function love.draw(screen)
       love.graphics.print("Select Menu", width / 2 - font:getWidth("Select Menu") / 2, height - 20 - font:getHeight() / 2 + topPanelY / 2)
     end
   end
+
+  if scene == "projectList" then
+    love.graphics.setBackgroundColor(currentAccent.r, currentAccent.g, currentAccent.b)
+
+    if screen == "bottom" then -- render bottom screen      
+      button.ext.state = "newProj"
+      -- !! Buttons !! --
+      love.graphics.setColor(1,1,1)
+      love.graphics.rectangle("fill", button.ext.x, button.ext.y - button.ext.height, button.ext.width, button.ext.height)    
+      love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
+
+      love.graphics.draw(icons.new, button.ext.width / 2 + button.ext.x - icons.close:getWidth() / 2 , button.ext.y - button.ext.height / 2 - icons.close:getHeight() / 2 )
+
+      love.graphics.draw(icons.code, button.settings.accent.x + 5, button.settings.accent.y + 2 - button.settings.accent.height)
+      love.graphics.print("Accent", button.settings.accent.x + 30,button.settings.accent.y + 5 - button.settings.accent.height)
+    end
+    
+    if screen ~= "bottom" then -- render top screen
+      love.graphics.setColor(1,1,1)
+
+      love.graphics.draw(icons.scr3DS, width / 2 - icons.scr3DS:getWidth() / 2, height / 2 - icons.scr3DS:getHeight() / 2)
+      topPanelY = topPanelY / 1.4
+
+      love.graphics.print(screen, 5, 5)
+      love.graphics.print(bp, 5, 15)
+
+      love.graphics.print(button.extClicks, 5, 25)
+      love.graphics.print(clickCoords, 5, 35)
+
+    end
+  end
+
+  if scene == "console" then
+    if screen ~= "bottom" then -- render top screen
+      love.graphics.setColor(0,0,0,1)
+      love.graphics.rectangle("fill", 0,0, width, height)
+      love.graphics.setColor(1,1,1)
+      love.graphics.print(theLog, 0, scroll)
+    end
+
+    if screen == "bottom" then -- render bottom screen
+      love.graphics.setColor(0,0,0,1)
+      love.graphics.rectangle("fill", 0,0, width, height)
+      love.graphics.setColor(1,1,1)
+      love.graphics.print("Press B to Exit. \n Y to reset Scroll. \n DP to scroll. \n X to Save", 0,0)
+    end
+  end
 end
 
 function love.update()
@@ -520,8 +663,14 @@ end
 -- !! END OF DRAW !! --
 
 function love.gamepadpressed(joystick, button)
+--  log(button.." pressed")
   love.graphics.setColor(0,0,1)
   bp = button
+
+  if button == "leftshoulder" then
+    openConsole()
+  end
+
   if scene == "editor:code" then
     if button == "rightshoulder" then
       depthEnabled = not depthEnabled
@@ -576,6 +725,28 @@ function love.gamepadpressed(joystick, button)
       scene = "editor:code"
     end
   end
+
+  if scene == "console" then
+    if button == "b" then
+      scene = prevScene
+    end
+    if button == "dpup" then
+      if scroll + 10 <= 0 then
+        scroll = scroll + 10
+        else
+          scroll = 0
+        end
+    end
+    if button == "dpdown" then
+      scroll = scroll - 10
+    end
+    if button == "y" then
+      scroll = 0
+    end
+    if button == "x" then
+      save("log")
+    end
+  end
 end
 
 function love.touchpressed(id, x, y, dx, dy, pressure)
@@ -584,13 +755,16 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
   love.graphics.print(x,y)
 
   -- extentions
-  if scene == "editor:code" or scene == "extentions" then
+  if scene == "editor:code" or scene == "extentions" or scene == "projectList" then
     if x > button.ext.x and x < button.ext.x + button.ext.width and y < button.ext.y and y > button.ext.y - button.ext.height and button.ext.enabled then -- Checks if the mouse is on the button
       if button.ext.state == "normal" then
         openExt()
       end
       if button.ext.state == "close" then
         closeExt()
+      end
+      if button.ext.state == "newProj" then
+        love.audio.play(sfx.select)
       end
     end
   end
@@ -601,7 +775,7 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
       clickCoords = {x,", ",y, ":file"}
       love.audio.play(sfx.select)
       startMenu("close")
-      save()
+      save("proj")
     end
     -- settings
     if x > button.startMenu.setting.x and x < button.startMenu.setting.x + button.startMenu.setting.width and y < button.startMenu.setting.y and y > button.startMenu.setting.y - button.startMenu.setting.height then 
@@ -650,6 +824,7 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
 end
 
 function openExt()
+  log("ext opened!")
   topPanelY = 20
   love.audio.play(sfx.select)
   switchSceneTo("extentions")
@@ -658,6 +833,7 @@ function openExt()
 end
 
 function closeExt()
+  log("ext closed!")
   love.audio.play(sfx.back)
   switchSceneTo("editor:code")
   -- love.audio.play(sfx.fadeOut)
@@ -665,6 +841,7 @@ function closeExt()
 end
 
 function startMenu(state)
+  log("startMenu() called with "..state)
   if state == "open" then
     topPanelY = 20
     switchSceneTo("startMenu")
@@ -681,24 +858,76 @@ function switchSceneTo(ID)
 end
 
 function save(type)
+  log("## STARTING SAVE "..type.."##")
   love.audio.play(sfx.load)
 
   if type == "proj" then 
+    love.keyboard.setTextInput(true)
     savefolder = "projects"
-    saveLocation = "./"..savefolder.."/"
+    saveLocation = "/"..savefolder.."/"
+    log("Saving in "..saveLocation)
 
     if not love.filesystem.getInfo(saveLocation) then
       love.filesystem.createDirectory(savefolder)
+      log("Creating dir: "..saveLocation)
     end
 
-    local saveFile = saveLocation.."save.txt"
-    love.filesystem.write(saveFile, "The words are not important to the plot.")
+    local saveFile = "project.json"
+    love.filesystem.write(saveFile, json.encode(projData))
 
     local error = nil
 
     saveFile, error = love.filesystem.read(saveFile)
 
-    print(error)
+    log(error)
+    love.window.showMessageBox( "Error!", error)
+
+    if error == 40 then
+      log("## SAVED SUCCESSFULLY ##")
+    end
+    if not love._os == "Horizon" or "cafe" then
+      love.system.openURL("file://"..love.filesystem.getSaveDirectory()..saveLocation)
+    end
+  end
+
+  if type == "log" then 
+    savefolder = "logs"
+    saveLocation = "/"..savefolder.."/"
+    log("Saving in "..saveLocation)
+
+    if not love.filesystem.getInfo(saveLocation) then
+      love.filesystem.createDirectory(savefolder)
+      log("Creating dir: "..saveLocation)
+    end
+
+    local saveFile = saveLocation..os.date("%b%d%Y-%I-%M-%S")..".txt"
+
+    success, message = love.filesystem.write(saveFile, theLog)
+
+    local error = nil
+
+    saveFile, error = love.filesystem.read(saveFile)
+
+    log(error)
+    love.window.showMessageBox( "Error!", error)
+    log("Log can be found: "..love.filesystem.getSaveDirectory()..saveLocation)
+
+    if error == 40 then
+      log("## SAVED SUCCESSFULLY ##")
+    end
+    if not love._os == "Horizon" or "cafe" then
+      love.system.openURL("file://"..love.filesystem.getSaveDirectory()..saveLocation)
+    end
   end
   love.audio.stop(sfx.load)
+end
+
+function openConsole()
+  scroll = 0
+  prevScene = scene
+  switchSceneTo("console")
+end
+
+function log(message)
+  theLog = theLog.."\n"..message
 end
