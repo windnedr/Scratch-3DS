@@ -19,6 +19,7 @@ html{
     background-size: 50px;
     /* linear-gradient(45deg ,var(--primary), #6a2be9); */
     background-color: var(--primary);
+    background-attachment: fixed;
 
     background-blend-mode: soft-light;
 
