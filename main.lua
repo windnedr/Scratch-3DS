@@ -7,53 +7,20 @@ stageScale = 1.52
 depthEnabled = false
 clickCoords = "None"
 
+editorScale = 2
+holdingObj = false
+
 scene = "editor:code"
 frame = 0
 
-theLog = "## LOG ##"
+theLog = "## START OF LOG ##"
 prevScene = nil
 
 scroll = 0
+scrollX = 0
+scrollY = 0
 
-projData = {
-  targets ={{
-    isStage = true,
-    name = "Stage",
-    variables = {myvariable = {"my variable",0}},
-    lists = {},
-    broadcasts = {},
-    blocks = {},
-    comments = {},
-    currentCostume = 0,
-    costumes = {{
-      name = "backdrop1",
-      dataFormat = "png",
-      assetId = nil,
-      md5ext = nil
-    }},
-    sounds = {{}},
-    volume = 100,
-    layerOrder = 0,
-    tempo = 60,
-    videoTransparency = 50,
-    videoState = "on",
-    textToSpeechLanguage = nil,
-    visible = true,
-    x = 0,
-    y = 0,
-    size = 100,
-    direction = 90,
-    draggable = false,
-    rotationStyle = "all around"
-  }},
-  monitors = {},
-  extensions = {},
-  meta = {
-    semver = "3.0.0",
-    vm = "4.8.32",
-    agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
-  }
-}
+hasEditedSinceLastSave = true
 
 color = {
   accent = {
@@ -87,6 +54,18 @@ color = {
     g = 1,
     b = 1,
   },
+  editor = {
+    comments = {
+      r = 254 /255, 
+      g = 244 /255,
+      b = 156 /255,
+      commentHeading = {
+        r = 228 /255, 
+        g = 219 /255,
+        b = 141 /255,
+      }
+    }
+  }
 }
 
 currentAccent = color.accent.purple
@@ -120,13 +99,17 @@ icons = {
   closeStart = love.graphics.newImage("assets/xStart.png"),
   new = love.graphics.newImage("assets/+.png"),
 }
+
 sfx = {
   select = love.audio.newSource("assets/SFX/Ready.wav", "static"),
   back = love.audio.newSource("assets/SFX/Unready.wav", "static"),
 
-
   fadeIn = love.audio.newSource("assets/SFX/fadeIn.wav", "static"),
   fadeOut = love.audio.newSource("assets/SFX/fadeOut.wav", "static"),
+
+  zoomIn = love.audio.newSource("assets/SFX/in.wav", "static"),
+  zoomOut = love.audio.newSource("assets/SFX/out.wav", "static"),
+
 
   load = love.audio.newSource("assets/SFX/load.wav", "static"),
 
@@ -140,6 +123,9 @@ topPanelY = 40
 bottomDimensions = {width=320,height=240}
 
 button = {
+  comments = {
+
+  },
   ext = {
     x = 0, 
     y = bottomDimensions.height,
@@ -270,7 +256,7 @@ projData = {
       width = 200,
       height = 200,
       minimized = false,
-      text = "This is a comment"
+      text = "This is not a comment."
     }},
     currentCostume = 0,
     costumes = {{
@@ -316,6 +302,7 @@ function love.load()
 
   font = love.graphics.newFont(12)
   fontBig = love.graphics.newFont(24)
+  fontComment = love.graphics.newFont(12)
 
   log("Load")
 
@@ -323,7 +310,12 @@ function love.load()
 
   log(love._console.." running on: "..love._os)
   log(projData.targets[1].variables.myvariable[1])
+
+  love.window.maximize()
   
+  if not projData.meta.platform.name == "Scratch-3DS" then
+    love.window.showMessageBox("Compatabiility unknown.", "This project was made with another client ("..projData.meta.platform.name.."). Compatabiility is unknown.")
+  end
 end
 
 function love.draw(screen)
@@ -367,17 +359,33 @@ function love.draw(screen)
   if scene == "editor:code" then
     if screen == "bottom" then -- render bottom screen
     
+      love.graphics.setColor(color.editor.comments.r,color.editor.comments.g,color.editor.comments.b)
+      love.graphics.rectangle("fill", projData.targets[1].comments.a.x - scrollX ,projData.targets[1].comments.a.y - scrollY, projData.targets[1].comments.a.width / editorScale, projData.targets[1].comments.a.height / editorScale)
+      love.graphics.setColor(0,0,0)
+
+      love.graphics.setFont(fontComment)
+      love.graphics.printf(projData.targets[1].comments.a.text, projData.targets[1].comments.a.x - scrollX + 3, projData.targets[1].comments.a.y - scrollY + 20/editorScale, projData.targets[1].comments.a.width / editorScale)
+      love.graphics.setFont(font)
+
+      love.graphics.setColor(color.editor.comments.commentHeading.r,color.editor.comments.commentHeading.g,color.editor.comments.commentHeading.b)
+      love.graphics.rectangle("line", projData.targets[1].comments.a.x - scrollX ,projData.targets[1].comments.a.y - scrollY, projData.targets[1].comments.a.width / editorScale, projData.targets[1].comments.a.height / editorScale)
+      love.graphics.rectangle("fill", projData.targets[1].comments.a.x - scrollX ,projData.targets[1].comments.a.y - scrollY, projData.targets[1].comments.a.width / editorScale, 20 / editorScale)
+      button.comments = {"a", x = projData.targets[1].comments.a.x - scrollX, y = projData.targets[1].comments.a.y - scrollY, width = projData.targets[1].comments.a.width, height=20 / editorScale }
+    
       love.graphics.setColor(229/255,240/255,1)
       love.graphics.rectangle("fill", 0,0, width, 30)
       love.graphics.setColor(195/255, 204/255, 217/255)
       love.graphics.line(0, 31, width, 31)
       love.graphics.rectangle("line", 0, 31, 40, height)
+      love.graphics.setColor(1,1,1, 0.8)
+      love.graphics.rectangle("fill", 0, 31, 40, height)
+
 
       -- Extentions Button
       love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
       love.graphics.rectangle("fill", button.ext.x, button.ext.y - button.ext.height, button.ext.width, button.ext.height)    
-      love.graphics.setColor(1,1,1)
 
+      love.graphics.setColor(1,1,1)
       love.graphics.draw(icons.ext, button.ext.width / 2 + button.ext.x - icons.ext:getWidth() / 2 , button.ext.y - button.ext.height / 2 - icons.ext:getHeight() / 2 )
     end
     
@@ -679,7 +687,7 @@ function love.draw(screen)
       love.graphics.setColor(0,0,0,1)
       love.graphics.rectangle("fill", 0,0, width, height)
       love.graphics.setColor(1,1,1)
-      love.graphics.print("Press B to Exit. \n Y to reset Scroll. \n DP to scroll. \n X to Save", 0,0)
+      love.graphics.print("Press B to Exit. \nY to reset Scroll. \nDP to scroll. \nX to Save", 0,0)
     end
   end
 end
@@ -715,9 +723,34 @@ function love.gamepadpressed(joystick, button)
       --})
       save("proj")
     end
+
+    if button == "dpdown" then
+      editorScale = editorScale + 0.5
+      love.audio.play(sfx.zoomOut)
+      fontComment = love.graphics.newFont(24 / editorScale)
+    end
+    if button == "dpup" then
+      editorScale = editorScale - 0.5
+      love.audio.play(sfx.zoomIn)
+      fontComment = love.graphics.newFont(24 / editorScale)
+    end
+    if button == "dpleft" then
+      scrollX = scrollX - 10
+    end
+    if button == "dpright" then
+      scrollX = scrollX + 10
+    end
     
     if button == "start" then
-      love.event.quit()
+      local buttons = {"Save and Exit", "Exit without Saving", "Cancel", escapebutton = 3}
+      local selectedButton = love.window.showMessageBox("Project unsaved", "Are sure you want to quit", buttons)
+      if selectedButton == 2 then
+        love.event.quit()
+      end
+      if selectedButton == 1 then
+        save("proj")
+        love.event.quit()
+      end
     end
     if button == "select" then
       startMenu("open")
@@ -851,6 +884,13 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
   end
 end
 
+function love.touchmoved( id, x, y, dx, dy, pressure )
+  if scene == "editor:code" and not holdingObj then
+    scrollX = scrollX - dx
+    scrollY = scrollY - dy
+  end
+end
+
 function openExt()
   log("ext opened!")
   topPanelY = 20
@@ -910,7 +950,9 @@ function save(type)
     log(error)
     love.window.showMessageBox( "Error!", error)
 
-    if error == 40 then
+    hasEditedSinceLastSave = true
+
+    if error == int then
       log("## SAVED SUCCESSFULLY ##")
     end
     if not love._os == "Horizon" or "cafe" then
