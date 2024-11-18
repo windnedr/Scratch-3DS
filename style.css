@@ -12,6 +12,8 @@ h1, p{
 
 p{
     color: var(--gray);
+    width: 70%;
+    padding-left: 15%;
 }
 
 html{
@@ -38,8 +40,8 @@ body{
 
     color: var(--primary);
 
-    width: 75vw;
-    margin-left: 12.5%;
+    /*width: 75vw;
+    margin-left: 12.5%;*/
 
     box-shadow: #480DBD 0px -4px 15px;
 
