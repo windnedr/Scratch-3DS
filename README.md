@@ -3,12 +3,6 @@
   
 A remake of [scratch](https://scratch.mit.edu/) using LOVEPOTION. <br>
 
-> [!WARNING]
-> My 3DS is in critical condition.<br>
-> *Scratch-3DS may be developed slower than usual until it's fixed.*<br>
-> <br>
-> Sorry for any inconvinence. :/
-
 **Will Support on launch**: <br>
 SB3 Import / Export <br>
 Original Scratch Blocks <br>
