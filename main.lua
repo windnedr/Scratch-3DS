@@ -1,5 +1,6 @@
 local nest = require("nest").init({ console = "3ds", scale = 1 })
 local json = require("json")
+local https = require("https")
 
 stageWidth = 480
 stageHeight = 360
@@ -17,8 +18,9 @@ theLog = "## START OF LOG ##"
 prevScene = nil
 
 scroll = 0
-scrollX = 0
-scrollY = 0
+scrollX = -40
+scrollY = -232
+scrollBlockList = 0
 
 hasEditedSinceLastSave = true
 
@@ -64,6 +66,53 @@ color = {
         g = 219 /255,
         b = 141 /255,
       }
+    },
+
+    -- A WHOLE lot of block colors for EVERY type. -- I'm already dreading Thisr = 254 /255, 
+    motion = {
+      r = 76 / 255,
+      g = 151 /255,
+      b = 255 /255,
+    },
+    looks = {
+      r = 153 / 255,
+      g = 102 /255,
+      b = 255 /255,
+    }, 
+    sound = {
+      r = 207 / 255,
+      g = 99 /255,
+      b = 207 /255,
+    }, 
+    events = {
+      r = 255 / 255,
+      g = 153 /255,
+      b = 0 /255,
+    }, 
+    control = {
+      r = 255 / 255,
+      g = 171 /255,
+      b = 25 /255,
+    }, 
+    sensing = {
+      r = 92 / 255,
+      g = 177 /255,
+      b = 214 /255,
+    }, 
+    operators = {
+      r = 89 / 255,
+      g = 192 /255,
+      b = 89 /255,
+    },
+    var = {
+      r = 255 / 255,
+      g = 140 /255,
+      b = 26 /255,
+    },
+    cblock = {
+      r = 255 / 255,
+      g = 102 /255,
+      b = 128 /255,
     }
   }
 }
@@ -112,7 +161,7 @@ sfx = {
 
 
   load = love.audio.newSource("assets/SFX/load.wav", "static"),
-
+  err = love.audio.newSource("assets/SFX/err.wav", "static"),
 }
 
 cat = love.graphics.rectangle("fill", 5, 5, 62, 118)
@@ -222,9 +271,28 @@ button = {
         height = 26,
         enabled=true
       },
+      black = {
+        x = 12, 
+        y = 12 + 26 * 4 + topPanelY,
+        width = bottomDimensions.width - 12 * 2, 
+        height = 26,
+        enabled=true
+      },
     },
+    sound = {
+        x = 12, 
+        y = 12 * 2 + topPanelY,
+        width = bottomDimensions.width - 12 * 2, 
+        height = 26,
+        enabled=true
+     }
   },
+  blockBar = {
+
+  }
 }
+
+currentComment = "a1"
 
 -- !!        THIS HANDLES SB3 FILES DIRECTLY         !! --
 -- !! DO NOT EDIT UNLESS YOU KNOW WHAT YOU'RE DOING. !! --
@@ -237,7 +305,7 @@ projData = {
     lists = {list={"list",{}}},
     broadcasts = {message1 = "message1"},
     blocks = {
-      a = {
+      a1 = {
         opcode = "event_whenflagclicked",
         next = nil,
         parent = nil,
@@ -249,10 +317,10 @@ projData = {
         y = 0,
       }
     },
-    comments = {a = {
+    comments = {a1 = {
       blockId = nil,
-      x = 100,
-      y = 100,
+      x = 0,
+      y = 0,
       width = 200,
       height = 200,
       minimized = false,
@@ -287,11 +355,16 @@ projData = {
     vm = "4.8.32",
     agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
     platform = {
-      name = "Scratch-3DS",
+      name = "Scratch ,l;3DS",
       url = "https://github.com/windnedr/scratch-3ds"
     }
   }
 }
+
+-- Internet --
+
+apiURL = "https://api.scratch.mit.edu/"
+api = {}
 
 function love.load()
   if love._console == "3ds" then
@@ -311,9 +384,11 @@ function love.load()
   log(love._console.." running on: "..love._os)
   log(projData.targets[1].variables.myvariable[1])
 
-  love.window.maximize()
+  -- love.window.maximize()
+
+  love.keyboard.setTextInput(false)
   
-  if not projData.meta.platform.name == "Scratch-3DS" then
+  if not projData.meta.platform.name == "Scratch 3DS" then
     love.window.showMessageBox("Compatabiility unknown.", "This project was made with another client ("..projData.meta.platform.name.."). Compatabiility is unknown.")
   end
 end
@@ -332,15 +407,18 @@ function love.draw(screen)
   button.settings.y = 12 + topPanelY
 
   button.settings.accent.y = 12 + 30 * 1 + topPanelY
+  button.settings.sound.y = 12 + 30 * 2 + topPanelY
 
   button.settings.accent.red.y = 12 + 30 * 1 + topPanelY
   button.settings.accent.blue.y = 12 + 30 * 2 + topPanelY
   button.settings.accent.purple.y = 12 + 30 * 3 + topPanelY
   button.settings.accent.orange.y = 12 + 30 * 4 + topPanelY
+  button.settings.accent.black.y = 12 + 30 * 5 + topPanelY
 
 
 
-  local sysDepth = love.graphics.getDepth() -- -love.graphics.getDepth()
+
+  local sysDepth = love.graphics.getDepth()
 
   local width, height = love.graphics.getDimensions(screen)
   if love._console == "3ds" then
@@ -360,17 +438,20 @@ function love.draw(screen)
     if screen == "bottom" then -- render bottom screen
     
       love.graphics.setColor(color.editor.comments.r,color.editor.comments.g,color.editor.comments.b)
-      love.graphics.rectangle("fill", projData.targets[1].comments.a.x - scrollX ,projData.targets[1].comments.a.y - scrollY, projData.targets[1].comments.a.width / editorScale, projData.targets[1].comments.a.height / editorScale)
+      love.graphics.rectangle("fill", projData.targets[1].comments.a1.x - scrollX ,projData.targets[1].comments.a1.y - projData.targets[1].comments.a1.height - scrollY, projData.targets[1].comments.a1.width / editorScale, projData.targets[1].comments.a1.height / editorScale)
       love.graphics.setColor(0,0,0)
 
+      drawBlock("hat", "When GF Clicked", projData.targets[1].blocks.a1.x, projData.targets[1].blocks.a1.y)
+
       love.graphics.setFont(fontComment)
-      love.graphics.printf(projData.targets[1].comments.a.text, projData.targets[1].comments.a.x - scrollX + 3, projData.targets[1].comments.a.y - scrollY + 20/editorScale, projData.targets[1].comments.a.width / editorScale)
+      love.graphics.setColor(0,0,0)
+      love.graphics.printf(projData.targets[1].comments.a1.text, projData.targets[1].comments.a1.x - scrollX + 3, projData.targets[1].comments.a1.y - projData.targets[1].comments.a1.height - scrollY + 20/editorScale, projData.targets[1].comments.a1.width / editorScale)
       love.graphics.setFont(font)
 
       love.graphics.setColor(color.editor.comments.commentHeading.r,color.editor.comments.commentHeading.g,color.editor.comments.commentHeading.b)
-      love.graphics.rectangle("line", projData.targets[1].comments.a.x - scrollX ,projData.targets[1].comments.a.y - scrollY, projData.targets[1].comments.a.width / editorScale, projData.targets[1].comments.a.height / editorScale)
-      love.graphics.rectangle("fill", projData.targets[1].comments.a.x - scrollX ,projData.targets[1].comments.a.y - scrollY, projData.targets[1].comments.a.width / editorScale, 20 / editorScale)
-      button.comments = {"a", x = projData.targets[1].comments.a.x - scrollX, y = projData.targets[1].comments.a.y - scrollY, width = projData.targets[1].comments.a.width, height=20 / editorScale }
+      love.graphics.rectangle("line", projData.targets[1].comments.a1.x - scrollX, projData.targets[1].comments.a1.y - scrollY, projData.targets[1].comments.a1.width / editorScale, projData.targets[1].comments.a1.height / editorScale)
+      love.graphics.rectangle("fill", projData.targets[1].comments.a1.x - scrollX, projData.targets[1].comments.a1.y - projData.targets[1].comments.a1.height - scrollY, projData.targets[1].comments.a1.width / editorScale, 20 / editorScale)
+      button.comments = {a1 = { x = projData.targets[1].comments.a1.x - scrollX, y = projData.targets[1].comments.a1.y / editorScale - scrollY, width = projData.targets[1].comments.a1.width / editorScale, height=projData.targets[1].comments.a1.height - 20 / editorScale }}
     
       love.graphics.setColor(229/255,240/255,1)
       love.graphics.rectangle("fill", 0,0, width, 30)
@@ -422,7 +503,7 @@ function love.draw(screen)
 
       love.graphics.setColor(1,1,1)
       love.graphics.draw(icons.n3DS, width / 2 - icons.n3DS:getWidth() / 2 - sysDepth * 5, height / 2 - icons.n3DS:getHeight() / 2 + topPanelY)
-      topPanelY = topPanelY / 1.4
+      topPanelY = topPanelY / 1.1
       love.graphics.print("Placeholder", 165, 60 + topPanelY / 2)
 
       love.graphics.print(screen, 5, 5)
@@ -454,6 +535,13 @@ function love.draw(screen)
 
       love.graphics.draw(icons.cost, button.settings.accent.x + 5, button.settings.accent.y + 2 - button.settings.accent.height)
       love.graphics.print("Accent", button.settings.accent.x + 30,button.settings.accent.y + 5 - button.settings.accent.height)
+
+      love.graphics.setColor(1,1,1,0.3)
+      love.graphics.rectangle("fill", button.settings.sound.x,button.settings.sound.y - button.settings.sound.height, button.settings.sound.width, button.settings.sound.height) 
+      love.graphics.setColor(1,1,1)
+
+      love.graphics.draw(icons.snd, button.settings.sound.x + 5, button.settings.sound.y + 2 - button.settings.sound.height)
+      love.graphics.print("Sounds", button.settings.sound.x + 30,button.settings.sound.y + 5 - button.settings.sound.height)
     end
     
     if screen ~= "bottom" then -- render top screen
@@ -507,11 +595,17 @@ function love.draw(screen)
       love.graphics.setColor(1,1,1)
       love.graphics.print("Scratch Purple", button.settings.accent.purple.x + 30,button.settings.accent.purple.y + 5 - button.settings.accent.purple.height)
 
-      -- purple
+      -- orang
       love.graphics.setColor(color.accent.orange.r, color.accent.orange.g, color.accent.orange.b)
       love.graphics.rectangle("fill", button.settings.accent.orange.x,button.settings.accent.orange.y - button.settings.accent.orange.height, button.settings.accent.orange.width, button.settings.accent.orange.height) 
       love.graphics.setColor(1,1,1)
       love.graphics.print("Scratch Orange", button.settings.accent.orange.x + 30,button.settings.accent.orange.y + 5 - button.settings.accent.orange.height)
+
+      -- black
+      love.graphics.setColor(color.accent.black.r, color.accent.black.g, color.accent.black.b)
+      love.graphics.rectangle("fill", button.settings.accent.black.x,button.settings.accent.black.y - button.settings.accent.black.height, button.settings.accent.black.width, button.settings.accent.black.height) 
+      love.graphics.setColor(1,1,1)
+      love.graphics.print("Black", button.settings.accent.black.x + 30,button.settings.accent.black.y + 5 - button.settings.accent.black.height)
     end
     
     if screen ~= "bottom" then -- render top screen
@@ -661,9 +755,10 @@ function love.draw(screen)
     end
     
     if screen ~= "bottom" then -- render top screen
+      local signPos = 1
       love.graphics.setColor(1,1,1)
 
-      love.graphics.draw(icons.scr3DS, width / 2 - icons.scr3DS:getWidth() / 2, height / 2 - icons.scr3DS:getHeight() / 2)
+      love.graphics.draw(icons.scr3DS, width / 2 - icons.scr3DS:getWidth() / 2 - sysDepth, height / 2 - icons.scr3DS:getHeight() / 2 + math.sin(signPos) * 30)
       topPanelY = topPanelY / 1.4
 
       love.graphics.print(screen, 5, 5)
@@ -671,8 +766,21 @@ function love.draw(screen)
 
       love.graphics.print(button.extClicks, 5, 25)
       love.graphics.print(clickCoords, 5, 35)
-
+      signPos = signPos + 1
     end
+    -- if screen == "right" then -- render top screen
+    --   local signPos = 0
+    --   love.graphics.setColor(1,1,1)
+
+    --   love.graphics.draw(icons.scr3DS, width / 2 - icons.scr3DS:getWidth() / 2 + sysDepth, height / 2 - icons.scr3DS:getHeight() / 2 + math.sin(signPos) * 30)
+    --   topPanelY = topPanelY / 1.4
+
+    --   love.graphics.print(screen, 5, 5)
+    --   love.graphics.print(bp, 5, 15)
+
+    --   love.graphics.print(button.extClicks, 5, 25)
+    --   love.graphics.print(clickCoords, 5, 35)
+    -- end
   end
 
   if scene == "console" then
@@ -690,6 +798,93 @@ function love.draw(screen)
       love.graphics.print("Press B to Exit. \nY to reset Scroll. \nDP to scroll. \nX to Save", 0,0)
     end
   end
+
+  -- Project Creation Scenes --
+  if scene == "projectCreation:name" then
+    love.graphics.setBackgroundColor(currentAccent.r, currentAccent.g, currentAccent.b, topPanelY / -40 + 0.5)
+
+    if screen == "bottom" then -- render bottom screen
+      love.graphics.setColor(1,1,1)
+      love.graphics.print("NAME", 320 / 2 - font:getWidth("Choose an Extention") / 2, 10 - topPanelY)
+
+      love.graphics.setColor(1,1,1)
+      love.graphics.rectangle("fill", button.ext.x, button.ext.y - button.ext.height, button.ext.width, button.ext.height)    
+      love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
+
+      love.graphics.draw(icons.close, button.ext.width / 2 + button.ext.x - icons.close:getWidth() / 2 , button.ext.y - button.ext.height / 2 - icons.close:getHeight() / 2 )
+    end
+    
+    if screen ~= "bottom" then -- render top screen
+
+      love.graphics.setColor(1,1,1)
+      topPanelY = topPanelY / 1.1
+
+      love.graphics.setFont(fontBig)
+      love.graphics.print("New Project", width / 2 - fontBig:getWidth("New Project") / 2, height - fontBig:getHeight() - 5 + topPanelY)
+      love.graphics.setFont(font)
+
+      love.graphics.setColor(1,1,1, topPanelY / 40)
+      topPanelY = topPanelY / 1.1
+
+      love.graphics.setFont(fontBig)
+      love.graphics.print("Import Project", width / 2 - fontBig:getWidth("Import Project") / 2, height - fontBig:getHeight() - 5 - topPanelY)
+      love.graphics.setFont(font)
+
+      love.graphics.print(screen, 5, 5)
+      love.graphics.print(bp, 5, 15)
+
+      love.graphics.print(button.extClicks, 5, 25)
+      love.graphics.print(clickCoords, 5, 35)
+    end
+  end
+  if scene == "projectCreation:import" then
+    love.graphics.setBackgroundColor(currentAccent.r, currentAccent.g, currentAccent.b, topPanelY / -40 + 0.5)
+
+    if screen == "bottom" then -- render bottom screen
+      love.graphics.setColor(1,1,1)
+      love.graphics.print("NAME", 320 / 2 - font:getWidth("Choose an Extention") / 2, 10 - topPanelY)
+
+      love.graphics.setColor(1,1,1)
+      love.graphics.rectangle("fill", button.ext.x, button.ext.y - button.ext.height, button.ext.width, button.ext.height)    
+      love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
+
+      love.graphics.draw(icons.close, button.ext.width / 2 + button.ext.x - icons.close:getWidth() / 2 , button.ext.y - button.ext.height / 2 - icons.close:getHeight() / 2 )
+    end
+    
+    if screen ~= "bottom" then -- render top screen
+
+      love.graphics.setColor(1,1,1)
+      topPanelY = topPanelY / 1.1
+
+      love.graphics.setFont(fontBig)
+      love.graphics.print("Import Project", width / 2 - fontBig:getWidth("Import Project") / 2, height - fontBig:getHeight() - 5 + topPanelY)
+      love.graphics.setFont(font)
+
+      love.graphics.print(screen, 5, 5)
+      love.graphics.print(bp, 5, 15)
+
+      love.graphics.print(button.extClicks, 5, 25)
+      love.graphics.print(clickCoords, 5, 35)
+
+    end
+  end
+
+  -- Internet --
+  if scene == "studio" then
+    love.graphics.setBackgroundColor(1,1,1)
+    if screen ~= "bottom" then -- render top screen
+      love.graphics.setColor(0,0,0)
+      love.graphics.setFont(fontBig)
+      love.graphics.print(api.title, 0,0)
+    end
+
+    if screen == "bottom" then -- render bottom screen
+      love.graphics.setColor(0,0,0)
+      love.graphics.setFont(font)
+      love.graphics.print(api.description, 0,0)
+    end
+  end
+
 end
 
 function love.update()
@@ -727,12 +922,12 @@ function love.gamepadpressed(joystick, button)
     if button == "dpdown" then
       editorScale = editorScale + 0.5
       love.audio.play(sfx.zoomOut)
-      fontComment = love.graphics.newFont(24 / editorScale)
+      -- fontComment = love.graphics.newFont(24 / editorScale)
     end
     if button == "dpup" then
       editorScale = editorScale - 0.5
       love.audio.play(sfx.zoomIn)
-      fontComment = love.graphics.newFont(24 / editorScale)
+      -- fontComment = love.graphics.newFont(24 / editorScale)
     end
     if button == "dpleft" then
       scrollX = scrollX - 10
@@ -742,18 +937,24 @@ function love.gamepadpressed(joystick, button)
     end
     
     if button == "start" then
-      local buttons = {"Save and Exit", "Exit without Saving", "Cancel", escapebutton = 3}
-      local selectedButton = love.window.showMessageBox("Project unsaved", "Are sure you want to quit", buttons)
-      if selectedButton == 2 then
-        love.event.quit()
-      end
-      if selectedButton == 1 then
-        save("proj")
-        love.event.quit()
-      end
+      -- local buttons = {"Save and Exit", "Exit without Saving", "Cancel", escapebutton = 3}
+      -- local selectedButton = love.window.showMessageBox("Project unsaved", "Are sure you want to quit", buttons)
+      -- if selectedButton == 2 then
+        switchSceneTo("projectList")
+      -- end
+      --if selectedButton == 1 then
+      --  save("proj")
+      --  switchSceneTo("projectList")
+      -- end
     end
-    if button == "select" then
+    if button == "back" then
       startMenu("open")
+    end
+  end
+
+  if scene == "projectList" then
+    if button == "x" then
+      openInternet("studios/35804590/")
     end
   end
 
@@ -763,7 +964,7 @@ function love.gamepadpressed(joystick, button)
     end
 
     if button == "y" then
-      success = love.system.openURL( "https://scratch.mit.edu/" )
+
     end
   end
 
@@ -813,8 +1014,17 @@ end
 function love.touchpressed(id, x, y, dx, dy, pressure)
   love.graphics.setColor(0,0,0)
   clickCoords = {x,", ",y }
-  love.graphics.print(x,y)
 
+  if scene == "editor:code" then
+    if x > button.comments.a1.x and x < button.comments.a1.x + button.comments.a1.width and y < button.comments.a1.y - button.comments.a1.height and y > button.comments.a1.y then -- Checks if the mouse is on the button
+      clickCoords = {x,", ",y, ":comment"}
+      if not love._os == "3DS" then
+        love.keyboard.setTextInput(true)
+      else
+        love.keyboard.setTextInput(true)
+      end
+    end
+  end
   -- extentions
   if scene == "editor:code" or scene == "extentions" or scene == "projectList" then
     if x > button.ext.x and x < button.ext.x + button.ext.width and y < button.ext.y and y > button.ext.y - button.ext.height and button.ext.enabled then -- Checks if the mouse is on the button
@@ -825,7 +1035,10 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
         closeExt()
       end
       if button.ext.state == "newProj" then
+        topPanelY = 50
         love.audio.play(sfx.select)
+        switchSceneTo("projectCreation:name")
+        love.keyboard.setTextInput(true)
       end
     end
   end
@@ -833,7 +1046,6 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
   if scene == "startMenu" then
     -- file
     if x > button.startMenu.file.x and x < button.startMenu.file.x + button.startMenu.file.width and y < button.startMenu.file.y and y > button.startMenu.file.y - button.startMenu.file.height then 
-      clickCoords = {x,", ",y, ":file"}
       love.audio.play(sfx.select)
       startMenu("close")
       save("proj")
@@ -874,11 +1086,17 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
     if x > button.settings.accent.blue.x and x < button.settings.accent.blue.x + button.settings.accent.blue.width and y < button.settings.accent.blue.y and y > button.settings.accent.blue.y - button.settings.accent.blue.height then 
       currentAccent = color.accent.blue
       love.audio.play(sfx.select)
-    end
+    end;
 
     -- settings : accent : orange
     if x > button.settings.accent.orange.x and x < button.settings.accent.orange.x + button.settings.accent.orange.width and y < button.settings.accent.orange.y and y > button.settings.accent.orange.y - button.settings.accent.orange.height then 
       currentAccent = color.accent.orange
+      love.audio.play(sfx.select)
+    end
+
+    -- settings : accent : black
+    if x > button.settings.accent.black.x and x < button.settings.accent.black.x + button.settings.accent.black.width and y < button.settings.accent.black.y and y > button.settings.accent.black.y - button.settings.accent.black.height then 
+      currentAccent = color.accent.black
       love.audio.play(sfx.select)
     end
   end
@@ -921,6 +1139,15 @@ function startMenu(state)
   end
 end
 
+function love.textinput(t)
+  local text = projData.targets[1].comments.a1.text == projData.targets[1].comments.a1.text .. t
+  log(t)
+  if t == "backspace" then
+    local byteoffset = utf8.offset(text, -1)
+    text = string.sub(text, 1, byteoffset - 1)
+  end
+end
+
 function switchSceneTo(ID)
   scene = ID
 end
@@ -948,7 +1175,7 @@ function save(type)
     saveFile, error = love.filesystem.read(saveFile)
 
     log(error)
-    love.window.showMessageBox( "Error!", error)
+    -- love.window.showMessageBox( "Error!", error)
 
     hasEditedSinceLastSave = true
 
@@ -979,14 +1206,17 @@ function save(type)
     saveFile, error = love.filesystem.read(saveFile)
 
     log(error)
-    love.window.showMessageBox( "Error!", error)
     log("Log can be found: "..love.filesystem.getSaveDirectory()..saveLocation)
 
     if error == 40 then
       log("## SAVED SUCCESSFULLY ##")
     end
-    if not love._os == "Horizon" or "cafe" then
-      love.system.openURL("file://"..love.filesystem.getSaveDirectory()..saveLocation)
+    log(love._os)
+    love.system.openURL("file://"..love.filesystem.getSaveDirectory()..saveLocation)
+    if not love._os == "Horizon" then
+      
+      else
+        log("Saved in sdmc://"..love.filesystem.getSaveDirectory()..saveLocation)
     end
   end
   love.audio.stop(sfx.load)
@@ -998,6 +1228,102 @@ function openConsole()
   switchSceneTo("console")
 end
 
+function drawBlock(type, text, x, y)
+  love.graphics.setColor(color.editor.control.r,color.editor.control.g,color.editor.control.b)
+
+  if type == "hat" then
+    love.graphics.ellipse("fill", x - scrollX + 102/2 / editorScale, y - scrollY, 102/2 / editorScale, 45/2 / editorScale, 400) -- Draw white ellipse with 100 segments.
+    love.graphics.rectangle("fill", x - scrollX - 102/2 / editorScale+ 102/2 / editorScale, y - scrollY , fontComment:getWidth(text) + 5, fontComment:getHeight(text) + 10)
+    --                                    x                                 y - - - - - - - - - -  y       width ---- width   height ----- height
+    -- i'm getting really confused by my own code so --
+    love.graphics.circle("fill", x - scrollX + 102/2 / editorScale-10, y - scrollY + 102/2 / editorScale - fontComment:getHeight(text) + 4, 10, 4)
+    love.graphics.setFont(fontComment)
+    love.graphics.setColor(1,1,1)
+    love.graphics.print(text, x - scrollX + 3, y - scrollY + 5 )
+  end
+  if not type == "hat" or type == "var" or type == "block" or type == "nest" then
+    error("Unknown block type: '"..type.."'\nOnly hat, var, block, or nest is supported.", 1)
+  end
+end
+
+
+
+function openInternet(path)
+  sfx.load:setLooping(true)
+  sfx.load:play()
+  if path == nil then
+    path = ""
+  end
+  local targetUrl = apiURL .. path
+  log("Trying to call api: "..targetUrl)
+  -- apiCall = json.decode(http.request(url))
+  code,body,headers = https.request(targetUrl)
+
+  api = json.decode(body)
+  log("Returned with code "..code)
+
+  -- sfx.load:stop()
+
+  -- log("Preparing to switch scenes.")
+
+  local passed = false
+
+  log(tostring(targetUrl, "studios")..tostring(targetUrl, "users")..tostring(targetUrl, "projects"))
+
+  if string.match(tostring(targetUrl), "studios") then
+    log("Studio matched")
+    passed = true
+    switchSceneTo("studio")
+  end
+
+  if string.match(tostring(targetUrl), "users") then
+    log("Users matched")
+    passed = true
+    switchSceneTo("user")
+  end
+
+  if string.match(tostring(targetUrl), "projects") then
+    passed = true
+    switchSceneTo("projects")
+  end
+
+  if not passed then
+    sfx.load:stop()
+    sfx.err:play()
+    log("Failed to open scene: Input matched None")
+  end
+
+  if code == 0 then
+    sfx.load:stop()
+    sfx.err:play()
+  else
+  end
+end
+
+-- -- imported from https://ptb.discord.com/channels/215551912823619584/1028043338361872434/1314363914112467025 --
+-- function refresh_data(url, request, inheaders, metoda)
+--   local request_body = request 
+--   response_body = {}
+  
+  
+--   code, body, headers = https.request(url, {data = request_body, method = metoda, headers = inheaders})
+-- end
+
+-- function downloadimage(url)
+--   if love._console == "3DS" then
+--     local data = json.encode({url = url})
+--     refresh_data("https://api.szprink.xyz/t3x/convert", data, {["api-version"] = "4.4", ["application-id"] = "%C5%BCappka", ["user-agent"] = "Synerise Android SDK 5.9.0 pl.zabka.apb2c", ["accept"] = "application/json", ["mobile-info"] = "horizon;28;AW700000000;9;CTR-001;nintendo;5.9.0", ["content-type"] = "application/json"}, "POST")
+--     local imageData = love.filesystem.newFileData(image, "image.t3x")
+--     testimage = love.graphics.newImage(imageData)
+--   else
+--     refresh_data(url, "", {}, "GET")
+--     local imageData = love.image.newImageData(love.filesystem.newFileData(image, "image.png"))
+--     testimage = love.graphics.newImage(imageData)
+--   end
+-- end
+
+-- log --
 function log(message)
+  print(message)
   theLog = theLog.."\n"..message
 end
