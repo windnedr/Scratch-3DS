@@ -2,6 +2,8 @@ local nest = require("nest").init({ console = "3ds", scale = 1 })
 local json = require("json")
 local https = require("https")
 
+selection = 0
+
 stageWidth = 480
 stageHeight = 360
 stageScale = 1.52
@@ -51,11 +53,19 @@ color = {
       g = 40 /255,
       b = 61 /255,
     },
-  }, bg = {
+  }, 
+  
+  bg = {
     r = 1, 
     g = 1,
     b = 1,
   },
+  offwhiteBG = {
+    r = 233 / 255, 
+    g = 241 / 255,
+    b = 252 / 255,
+  },
+
   editor = {
     comments = {
       r = 254 /255, 
@@ -255,7 +265,7 @@ button = {
         y = 12 + 26 * 2 + topPanelY,
         width = bottomDimensions.width - 12 * 2, 
         height = 26,
-        enabled=true
+        enabled = true
       },
       purple = {
         x = 12, 
@@ -355,7 +365,7 @@ projData = {
     vm = "4.8.32",
     agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
     platform = {
-      name = "Scratch ,l;3DS",
+      name = "Scratch 3DS",
       url = "https://github.com/windnedr/scratch-3ds"
     }
   }
@@ -365,6 +375,26 @@ projData = {
 
 apiURL = "https://api.scratch.mit.edu/"
 api = {}
+apiImg = {}
+
+sections = {
+  user = {
+    "Shared",
+    "Favorites",
+    "Followed Studios",
+    "Studios I Curate",
+    "Following",
+    "Followers"
+  }
+}
+
+subSceneID = 0
+
+subSceneList = {
+  user = {
+    "projects"
+  }
+}
 
 function love.load()
   if love._console == "3ds" then
@@ -378,8 +408,6 @@ function love.load()
   fontComment = love.graphics.newFont(12)
 
   log("Load")
-
-  json.decode("{}")
 
   log(love._console.." running on: "..love._os)
   log(projData.targets[1].variables.myvariable[1])
@@ -871,20 +899,135 @@ function love.draw(screen)
 
   -- Internet --
   if scene == "studio" then
-    love.graphics.setBackgroundColor(1,1,1)
+    love.graphics.setBackgroundColor(color.offwhiteBG.r, color.offwhiteBG.g, color.offwhiteBG.b)
     if screen ~= "bottom" then -- render top screen
+      love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
+      love.graphics.rectangle("fill", 0,0,width,fontBig:getHeight("S")+5)
+
       love.graphics.setColor(0,0,0)
       love.graphics.setFont(fontBig)
-      love.graphics.print(api.title, 0,0)
+      love.graphics.print(api.title, width / 2 - fontBig:getWidth(api.title)/2,0)
+
+      love.graphics.setColor(0,0,0)
+      love.graphics.setFont(font)
+      love.graphics.printf(api.description, 5,10  + fontBig:getHeight("S"), width - 10, "center")
+
+      -- love.graphics.draw(apiImg, 5, fontBig:getWidth("l"))
+      love.graphics.setColor(0.4,0.4,0.6)
+      -- love.graphics.print(api.stats.comments.." Comments", width / 2 - font:getWidth(api.stats.comments.." Comments")/2,height - font:getHeight("l") * 4)
+      -- love.graphics.print(api.stats.followers.." Followers", width / 2 - font:getWidth(api.stats.followers.." Followers")/2,height - font:getHeight("l") * 3)
+      -- love.graphics.print(api.stats.managers.." Managers", width / 2 - font:getWidth(api.stats.managers.." Managers")/2,height - font:getHeight("l") * 2)
+      -- love.graphics.print(api.stats.projects.." Projects", width / 2 - font:getWidth(api.stats.projects.."Projects")/2,height - font:getHeight("l") * 1)
+      love.graphics.rectangle("fill", 0, height - font:getHeight("7"), width, 100)
+      love.graphics.setColor(0,0,0)
+      love.graphics.print(api.stats.comments.." Comments • "..api.stats.followers.." Followers • "..api.stats.managers.." Managers • "..api.stats.projects.." Projects", width / 2 - font:getWidth(api.stats.comments.." Comments • "..api.stats.followers.." Followers • "..api.stats.managers.." Managers • "..api.stats.projects.." Projects")/2,height - font:getHeight("l") * 1)
     end
 
     if screen == "bottom" then -- render bottom screen
-      love.graphics.setColor(0,0,0)
-      love.graphics.setFont(font)
-      love.graphics.print(api.description, 0,0)
+      love.graphics.print(selection,0,0)
+      for i=1, #api.projects do
+        if selection == i then
+          love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
+        else
+          love.graphics.setColor(1,1,1)
+        end
+        love.graphics.rectangle("fill", 5, 5 + 105/2 * i + scrollY, width - 10, font:getHeight("l") + fontBig:getHeight("l"))
+
+        love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
+        love.graphics.setFont(fontBig)
+        love.graphics.print(api.projects[i].title,10,105/2*i + 5 + scrollY)
+
+        love.graphics.setColor(0.4,0.4,0.4)
+        love.graphics.setFont(font)
+        love.graphics.print("by: "..api.projects[i].username,10,105/2 * i + fontBig:getHeight("l") + scrollY)
+      end
     end
   end
 
+  if scene == "user" then
+    if screen ~= "bottom" then
+      scale = 0.77
+      love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
+      love.graphics.rectangle("fill", 0,0,width,fontBig:getHeight("S")+5)
+
+      love.graphics.setColor(0,0,0)
+      love.graphics.setFont(fontBig)
+      love.graphics.print(api.username,apiImg[1]:getWidth() + 5,0)
+
+      love.graphics.setColor(1,1,1)
+      love.graphics.draw(apiImg[1],0 ,0 ,0 ,scale,scale)
+
+      love.graphics.setColor(0,0,0)
+      love.graphics.setFont(fontBig)
+      love.graphics.print("About me",5,fontBig:getHeight("t") * 1 + 10)
+
+      love.graphics.setFont(font)
+      love.graphics.printf( api.profile.bio, 5, fontBig:getHeight("t") * 2 + 10, 320 / 2 + 30)
+
+      love.graphics.setFont(fontBig)
+      love.graphics.print("What i'm making",320 / 2 + 40,fontBig:getHeight("t") * 1 + 10)
+
+      love.graphics.setFont(font)
+      love.graphics.printf( api.profile.status, 320 / 2 + 40, fontBig:getHeight("t") * 2 + 10, 320 / 2 + 30)
+    end
+
+    if screen == "bottom" then
+      for i=1, #api.projects do
+        if selection == i then
+          love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
+        else
+          love.graphics.setColor(1,1,1)
+        end
+        love.graphics.rectangle("fill", 5, 5 + 105/2 * i + scrollY, width - 10, font:getHeight("l") + fontBig:getHeight("l"))
+
+        love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
+        love.graphics.setFont(fontBig)
+        love.graphics.print(api.projects[i].title,10,105/2*i + 5 + scrollY)
+
+        love.graphics.setColor(0.4,0.4,0.4)
+        love.graphics.setFont(font)
+        love.graphics.print("by: "..api.username,10,105/2 * i + fontBig:getHeight("l") + scrollY)
+      end
+    end
+  end
+
+  if scene == "project" then
+    if screen ~= "bottom" then
+      love.graphics.setColor(1,1,1)
+      love.graphics.draw(apiImg[1], width / 2 - 480 * 0.666 / 2, 0,0,0.666,0.666)
+    end
+    if screen == "bottom" then
+      love.graphics.setFont(fontBig)
+      love.graphics.setColor(0,0,0)
+      love.graphics.print(tostring(api.title), 5, 5)
+      
+      love.graphics.setFont(font)
+      textwidth, lines = font:getWrap( api.instructions, 320-10 )
+
+      if selection == 1 then
+        love.graphics.setColor(0,0,0)
+        love.graphics.print(api.author.username, 5, fontBig:getHeight("l") + 5)
+      else
+        love.graphics.setColor(currentAccent.r, currentAccent.g, currentAccent.b)
+        love.graphics.print(api.author.username, 5, fontBig:getHeight("l") + 5)
+      end
+      
+      
+      love.graphics.setFont(fontBig)
+      love.graphics.setColor(0,0,0)
+      love.graphics.print("Instructions", 5, 5 + fontBig:getHeight("l") + font:getHeight("s"))
+
+      love.graphics.setFont(font)
+      love.graphics.printf(api.instructions, 5, fontBig:getHeight("l")*2+5 + font:getHeight("s"),320-10)
+
+      love.graphics.setFont(fontBig)
+      love.graphics.setColor(0,0,0)
+      love.graphics.print("Notes & Credits", 5, fontBig:getHeight("l") * 2 + 5 + font:getHeight("l") * table.getn(lines) + font:getHeight("s"))
+
+      love.graphics.setFont(font)
+      love.graphics.printf(api.description, 5, fontBig:getHeight("l")*3+5 + font:getHeight("l") * table.getn(lines) + font:getHeight("s"),320-10)
+    end
+  end
 end
 
 function love.update()
@@ -899,7 +1042,43 @@ function love.gamepadpressed(joystick, button)
   bp = button
 
   if button == "leftshoulder" then
-    openConsole()
+    -- openConsole()
+  end
+  
+  if scene == "studio" or scene == "user" then
+    if button == "dpdown" then
+      selection = selection + 1
+    end
+    if button == "dpup" then
+      selection = selection - 1
+    end
+    if button == "a" then
+      openInternet("projects/"..api.projects[selection].id)
+      selection = 0
+    end
+  end
+
+  if scene == "project" then
+    if button == "dpdown" then
+      selection = selection + 1
+    end
+    if button == "dpup" then
+      selection = selection - 1
+    end
+    if button == "a" then
+      if selection == 1 then
+        openInternet("users/"..api.author.username)
+      end
+    end
+  end
+
+  if scene == "user" then
+    if button == "leftshoulder" then
+      subSceneID = subSceneID - 1
+    end
+    if button == "rightshoulder" then
+      subSceneID = subSceneID + 1
+    end
   end
 
   if scene == "editor:code" then
@@ -1107,6 +1286,11 @@ function love.touchmoved( id, x, y, dx, dy, pressure )
     scrollX = scrollX - dx
     scrollY = scrollY - dy
   end
+
+  if scene == "studio" or scene == "user" and not holdingObj then
+    scrollX = scrollX + dx
+    scrollY = scrollY + dy
+  end
 end
 
 function openExt()
@@ -1248,7 +1432,7 @@ end
 
 
 
-function openInternet(path)
+function openInternet(path, apiSubCat)
   sfx.load:setLooping(true)
   sfx.load:play()
   if path == nil then
@@ -1258,33 +1442,96 @@ function openInternet(path)
   log("Trying to call api: "..targetUrl)
   -- apiCall = json.decode(http.request(url))
   code,body,headers = https.request(targetUrl)
-
-  api = json.decode(body)
-  log("Returned with code "..code)
+    
+  local function overwriteAPI()
+    api = json.decode(body)
+  end
+    log("Returned with code "..code)
 
   -- sfx.load:stop()
 
   -- log("Preparing to switch scenes.")
 
-  local passed = false
+    local passed = false
 
-  log(tostring(targetUrl, "studios")..tostring(targetUrl, "users")..tostring(targetUrl, "projects"))
+    if string.match(tostring(targetUrl), "studios") and not string.match(tostring(targetUrl), "projects") then
+      log("Studio matched")
+      passed = true
 
-  if string.match(tostring(targetUrl), "studios") then
-    log("Studio matched")
-    passed = true
-    switchSceneTo("studio")
+      overwriteAPI()
+    
+      -- managers --
+      if string.match(targetUrl, "managers") then
+        subScene = "managers"
+      end
+      -- Activity --
+      if string.match(targetUrl, "activity") then
+        subScene = "activity"
+      end
+      -- Comments --
+      if string.match(targetUrl, "comments") then
+        subScene = "comments"
+      end
+      -- Replies --
+      if string.match(targetUrl, "replies") then
+        subScene = "replies"
+      end
+
+      if subScene == nil then
+        openInternet("studios/"..api.id.."/projects?limit=20&offset=0", "proj")
+        scrollY = -53
+      end
+
+      switchSceneTo("studio")
   end
 
   if string.match(tostring(targetUrl), "users") then
-    log("Users matched")
-    passed = true
-    switchSceneTo("user")
+
+    if string.match(tostring(targetUrl), "projects") then
+      passed = true
+      scrollY = -205
+      log("loading Projects")
+      api["projects"] = json.decode(body)
+      log(body)
+      if api.projects[1] == nil then
+        log("Failed to load projects!\n"..body)
+      end
+    else
+      log("Users matched")
+      overwriteAPI()
+      passed = true
+      downloadimage(api.profile.images['50x50'], 1)
+      switchSceneTo("user")
+
+      openInternet("users/"..api.username.."/projects?limit=20&offset=0", "proj")
+      scrollY = -53
+    end
   end
 
-  if string.match(tostring(targetUrl), "projects") then
+  if string.match(tostring(targetUrl), apiURL.."projects/") then
+    overwriteAPI()
     passed = true
-    switchSceneTo("projects")
+    switchSceneTo("project")
+    downloadimage(api.image, 1)
+  end
+
+  if string.match(tostring(targetUrl), "projects") and string.match(tostring(targetUrl), "studios") then
+    passed = true
+    scrollY = -205
+    log("loading Projects")
+    api["projects"] = json.decode(body)
+    log(body)
+    if api.projects[1] == nil then
+      log("Failed to load projects!\n"..body)
+    end
+
+    -- for i=1, api.stats.projects do
+    --   downloadimage(api.projects[i].image, i)
+    -- end
+  end
+
+  if passed then
+    love.audio.stop(sfx.load)
   end
 
   if not passed then
@@ -1300,27 +1547,27 @@ function openInternet(path)
   end
 end
 
--- -- imported from https://ptb.discord.com/channels/215551912823619584/1028043338361872434/1314363914112467025 --
--- function refresh_data(url, request, inheaders, metoda)
---   local request_body = request 
---   response_body = {}
+-- imported from https://ptb.discord.com/channels/215551912823619584/1028043338361872434/1314363914112467025 --
+function refresh_data(url, request, inheaders, metoda)
+  local request_body = request 
+  response_body = {}
   
   
---   code, body, headers = https.request(url, {data = request_body, method = metoda, headers = inheaders})
--- end
+  code, body, headers = https.request(url, {data = request_body, method = metoda, headers = inheaders})
+end
 
--- function downloadimage(url)
---   if love._console == "3DS" then
---     local data = json.encode({url = url})
---     refresh_data("https://api.szprink.xyz/t3x/convert", data, {["api-version"] = "4.4", ["application-id"] = "%C5%BCappka", ["user-agent"] = "Synerise Android SDK 5.9.0 pl.zabka.apb2c", ["accept"] = "application/json", ["mobile-info"] = "horizon;28;AW700000000;9;CTR-001;nintendo;5.9.0", ["content-type"] = "application/json"}, "POST")
---     local imageData = love.filesystem.newFileData(image, "image.t3x")
---     testimage = love.graphics.newImage(imageData)
---   else
---     refresh_data(url, "", {}, "GET")
---     local imageData = love.image.newImageData(love.filesystem.newFileData(image, "image.png"))
---     testimage = love.graphics.newImage(imageData)
---   end
--- end
+function downloadimage(url, value)
+  if love._os == "Horizon" then
+    local data = json.encode({url = url})
+    refresh_data("https://api.szprink.xyz/t3x/convert", data, {["api-version"] = "4.4", ["application-id"] = "%C5%BCappka", ["user-agent"] = "Synerise Android SDK 5.9.0 pl.zabka.apb2c", ["accept"] = "application/json", ["mobile-info"] = "horizon;28;AW700000000;9;CTR-001;nintendo;5.9.0", ["content-type"] = "application/json"}, "POST")
+    local imageData = love.filesystem.newFileData(body, "image.t3x")
+    apiImg[value] = love.graphics.newImage(imageData)
+  else
+    refresh_data(url, "", {}, "GET")
+    local imageData = love.image.newImageData(love.filesystem.newFileData(body, "image.png"))
+    apiImg[value] = love.graphics.newImage(imageData)
+  end
+end
 
 -- log --
 function log(message)
