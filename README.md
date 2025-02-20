@@ -3,6 +3,8 @@
   
 A remake of [scratch](https://scratch.mit.edu/) using LOVEPOTION. <br>
 
+[Scratch 3DS news](https://scratch.mit.edu/projects/1107160168/)
+
 **Will Support on launch**: <br>
 SB3 Import / Export <br>
 Original Scratch Blocks <br>
