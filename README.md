@@ -25,7 +25,7 @@ You can either get a prebuild from [Releases](https://github.com/windnedr/Scratc
 ### Building
 
 > [!NOTE]
-> This project uses LOVE 12. Any newer or older versons will not work.
+> This project uses LOVE 12. Any older versons will not work.
 
 To build, you need . . .
 
