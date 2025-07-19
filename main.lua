@@ -8,6 +8,8 @@ stageScale = 1.52
 depthEnabled = false
 clickCoords = "None"
 
+sprites = {}
+
 editorScale = 2
 holdingObj = false
 
@@ -355,7 +357,7 @@ projData = {
     vm = "4.8.32",
     agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
     platform = {
-      name = "Scratch ,l;3DS",
+      name = "Scratch 3DS",
       url = "https://github.com/windnedr/scratch-3ds"
     }
   }
@@ -379,7 +381,7 @@ function love.load()
 
   log("Load")
 
-  json.decode("{}")
+  projData = json.decode(love.filesystem.read( ".projectExample.json" ))
 
   log(love._console.." running on: "..love._os)
   log(projData.targets[1].variables.myvariable[1])
@@ -420,7 +422,7 @@ function love.draw(screen)
 
   local sysDepth = love.graphics.getDepth()
 
-  local width, height = love.graphics.getDimensions(screen)
+  width, height = love.graphics.getDimensions(screen)
   if love._console == "3ds" then
     depthSlider = math.floor(love.graphics.getDepth() * 100)
   else
@@ -438,21 +440,13 @@ function love.draw(screen)
     if screen == "bottom" then -- render bottom screen
     
       love.graphics.setColor(color.editor.comments.r,color.editor.comments.g,color.editor.comments.b)
-      love.graphics.rectangle("fill", projData.targets[1].comments.a1.x - scrollX ,projData.targets[1].comments.a1.y - projData.targets[1].comments.a1.height - scrollY, projData.targets[1].comments.a1.width / editorScale, projData.targets[1].comments.a1.height / editorScale)
       love.graphics.setColor(0,0,0)
-
-      drawBlock("hat", "When GF Clicked", projData.targets[1].blocks.a1.x, projData.targets[1].blocks.a1.y)
 
       love.graphics.setFont(fontComment)
       love.graphics.setColor(0,0,0)
-      love.graphics.printf(projData.targets[1].comments.a1.text, projData.targets[1].comments.a1.x - scrollX + 3, projData.targets[1].comments.a1.y - projData.targets[1].comments.a1.height - scrollY + 20/editorScale, projData.targets[1].comments.a1.width / editorScale)
+
       love.graphics.setFont(font)
 
-      love.graphics.setColor(color.editor.comments.commentHeading.r,color.editor.comments.commentHeading.g,color.editor.comments.commentHeading.b)
-      love.graphics.rectangle("line", projData.targets[1].comments.a1.x - scrollX, projData.targets[1].comments.a1.y - scrollY, projData.targets[1].comments.a1.width / editorScale, projData.targets[1].comments.a1.height / editorScale)
-      love.graphics.rectangle("fill", projData.targets[1].comments.a1.x - scrollX, projData.targets[1].comments.a1.y - projData.targets[1].comments.a1.height - scrollY, projData.targets[1].comments.a1.width / editorScale, 20 / editorScale)
-      button.comments = {a1 = { x = projData.targets[1].comments.a1.x - scrollX, y = projData.targets[1].comments.a1.y / editorScale - scrollY, width = projData.targets[1].comments.a1.width / editorScale, height=projData.targets[1].comments.a1.height - 20 / editorScale }}
-    
       love.graphics.setColor(229/255,240/255,1)
       love.graphics.rectangle("fill", 0,0, width, 30)
       love.graphics.setColor(195/255, 204/255, 217/255)
@@ -473,8 +467,8 @@ function love.draw(screen)
     if screen ~= "bottom" then -- render top screen
       love.graphics.setColor(195/255, 204/255, 217/255)
       love.graphics.rectangle("line", width / 2 - stageWidth/stageScale/2, height / 2 - stageHeight/stageScale/2 , stageWidth/stageScale, stageHeight/stageScale)
-      love.graphics.setColor(0.5,0.5,0.5)
-      love.graphics.rectangle("fill", width / 2 - 62/stageScale/2, height/2  - 118/stageScale/2, 62/stageScale, 118/stageScale) 
+      
+      renderSprites()
       love.graphics.print(screen, 5, 5)
       love.graphics.print(bp, 5, 15)
       love.graphics.print(button.ext.state, 5, 45)
@@ -1016,14 +1010,14 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
   clickCoords = {x,", ",y }
 
   if scene == "editor:code" then
-    if x > button.comments.a1.x and x < button.comments.a1.x + button.comments.a1.width and y < button.comments.a1.y - button.comments.a1.height and y > button.comments.a1.y then -- Checks if the mouse is on the button
-      clickCoords = {x,", ",y, ":comment"}
-      if not love._os == "3DS" then
-        love.keyboard.setTextInput(true)
-      else
-        love.keyboard.setTextInput(true)
-      end
-    end
+    -- if x > button.comments.a1.x and x < button.comments.a1.x + button.comments.a1.width and y < button.comments.a1.y - button.comments.a1.height and y > button.comments.a1.y then -- Checks if the mouse is on the button
+    --   clickCoords = {x,", ",y, ":comment"}
+    --   if not love._os == "3DS" then
+    --     love.keyboard.setTextInput(true)
+    --   else
+    --     love.keyboard.setTextInput(true)
+    --   end
+    -- end
   end
   -- extentions
   if scene == "editor:code" or scene == "extentions" or scene == "projectList" then
@@ -1103,6 +1097,7 @@ function love.touchpressed(id, x, y, dx, dy, pressure)
 end
 
 function love.touchmoved( id, x, y, dx, dy, pressure )
+  sprite()
   if scene == "editor:code" and not holdingObj then
     scrollX = scrollX - dx
     scrollY = scrollY - dy
@@ -1140,7 +1135,7 @@ function startMenu(state)
 end
 
 function love.textinput(t)
-  local text = projData.targets[1].comments.a1.text == projData.targets[1].comments.a1.text .. t
+  -- local text = projData.targets[1].comments.a1.text == projData.targets[1].comments.a1.text .. t
   log(t)
   if t == "backspace" then
     local byteoffset = utf8.offset(text, -1)
@@ -1228,14 +1223,38 @@ function openConsole()
   switchSceneTo("console")
 end
 
+function renderSprites()
+  love.graphics.setColor(0.5,0.5,0.5)
+
+  for sprite = 1, table.getn(projData.targets) do
+    if projData.targets[sprite].isStage == true then
+      -- TODO: make stage
+    else
+      w = 8
+      h = 8
+
+      log("rendering sprite")
+      log(projData.targets[sprite].x)
+      log(projData.targets[sprite].y)
+      love.graphics.rectangle("fill",
+      (width / 2) - (stageWidth/stageScale/2) + stageWidth/stageScale/2 + projData.targets[sprite].x/stageScale,
+      (height / 2) - (stageWidth/stageScale/2) + stageWidth/stageScale/2 - projData.targets[sprite].y/stageScale,
+      w/stageScale,
+      h/stageScale) 
+    end
+  end
+end
+
 function drawBlock(type, text, x, y)
   love.graphics.setColor(color.editor.control.r,color.editor.control.g,color.editor.control.b)
 
   if type == "hat" then
     love.graphics.ellipse("fill", x - scrollX + 102/2 / editorScale, y - scrollY, 102/2 / editorScale, 45/2 / editorScale, 400) -- Draw white ellipse with 100 segments.
-    love.graphics.rectangle("fill", x - scrollX - 102/2 / editorScale+ 102/2 / editorScale, y - scrollY , fontComment:getWidth(text) + 5, fontComment:getHeight(text) + 10)
-    --                                    x                                 y - - - - - - - - - -  y       width ---- width   height ----- height
-    -- i'm getting really confused by my own code so --
+    love.graphics.rectangle("fill",
+    x - scrollX - 102/2 / editorScale+ 102/2 / editorScale, 
+    y - scrollY , fontComment:getWidth(text) + 5, 
+    fontComment:getHeight(text) + 10)
+
     love.graphics.circle("fill", x - scrollX + 102/2 / editorScale-10, y - scrollY + 102/2 / editorScale - fontComment:getHeight(text) + 4, 10, 4)
     love.graphics.setFont(fontComment)
     love.graphics.setColor(1,1,1)
@@ -1246,7 +1265,21 @@ function drawBlock(type, text, x, y)
   end
 end
 
+function sprite()
+  
+  function block(blockName)
+    if blockName == "motion_changexby" then
+      motion_changexby()
+    end
+    if blockName == "event_whenflagclicked" then
+      event_whenflagclicked()
+    end
+  end
 
+  -- while true do
+  --   stageHeight = stageHeight + 1
+  -- end
+end
 
 function openInternet(path)
   sfx.load:setLooping(true)
@@ -1327,3 +1360,4 @@ function log(message)
   print(message)
   theLog = theLog.."\n"..message
 end
+
