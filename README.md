@@ -3,22 +3,31 @@
   
 A remake of [scratch](https://scratch.mit.edu/) using LOVEPOTION. <br>
 
+[Scratch 3DS news](https://scratch.mit.edu/projects/1107160168/)
+
 **Will Support on launch**: <br>
+Scratch Web <br>
 SB3 Import / Export <br>
 Original Scratch Blocks <br>
 3D Functions <br>
 
 **Won't support on launch**: <br>
+Publishing <br>
 SVG <br>
 Pen (yet) <br>
 
 ## About This project
 This originaly started as a fully non-functional joke. While it was in my head, I decided to open a SB3 file and saw how easy the structure is.
 Since then, I decided to turn the joke into a remake of scratch.
+
 ## Downloading 
 You can either get a prebuild from [Releases](https://github.com/windnedr/Scratch-3DS/releases) or Build it yourself by downloading the source code.
 ### Building
-To build, you need...
+
+> [!NOTE]
+> This project uses LOVE 12. Any older versons will not work.
+
+To build, you need . . .
 
 do this, do that. Congrat
 
